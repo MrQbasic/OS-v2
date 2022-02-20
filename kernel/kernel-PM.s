@@ -38,11 +38,41 @@ start:
     cpuid
     test edx, (1 << 29)
     jz reboot
-    ;go into LM
+    ;setup PLM4 table
+    mov edi, PML4_BASE
+    mov cr3, edi
+    xor eax, eax
+    mov ecx, 4096
+    rep stosd
+    mov edi, cr3
+    mov dword [edi], 0x71003
+    add edi, 0x1000
+    mov dword [edi], 0x72003
+    add edi, 0x1000
+    mov dword [edi], 0x73003
+    add edi, 0x1000
+    mov ebx, 0x00000003
+    mov ecx, 512
+    loop1:
+        mov dword [edi], ebx
+        add ebx, 0x1000
+        add edi, 8
+        loop loop1
+    mov eax, cr4
+    or eax, (1 << 5)
+    mov cr4, eax
+    ;enter LM
+    mov eax, (CR4_PAE | CR4_PGE) 
+    mov cr4, eax
+    mov eax, PML4_BASE
+    mov cr3, eax
     mov ecx, 0xC0000080
     rdmsr
-    or eax, (1 << 8)
+    or eax, EFER_LME
     wrmsr
+    mov ebx, cr0
+    or ebx, (CR0_PG | CR0_PE)
+    mov cr0, ebx
     ;setup GDT
     lgdt [GDT64.Pointer] 
 	jmp GDT64.Code:LM
@@ -53,6 +83,13 @@ IDTR:
     dw 0
     dd 0
 
+;-------------------------------------------------------------------------------------------
+PML4_BASE equ 0x70000
+CR0_PE    equ 1 << 0
+CR0_PG    equ 1 << 31
+CR4_PAE   equ 1 << 5
+CR4_PGE   equ 1 << 7
+EFER_LME  equ 1 << 8
 ;---GDT-TO-ENTER-PM---
 gdt_start:
 gdt_null:

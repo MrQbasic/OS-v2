@@ -75,7 +75,7 @@ idt_setreg:
     mov [IDTR.offset], rdi          ;set the offset
     mov cx, 16                      ;setup 16 for mul
     mul cx                          ;size = size * 16
-    add ax, 15                      ;set size += 16
+    add ax, 16                      ;set size += 16
     mov [IDTR.size], ax             ;set the size
     cli
     lidt[IDTR]                      ;load IDTR

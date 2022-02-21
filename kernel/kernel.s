@@ -1,22 +1,15 @@
 [bits 64]
 kernelstart:
     call screen_clear
-    mov edi, T_TEST
+    mov rdi, T_KERNEL_MSG
     call screen_print_string
 
-    call screen_nl
-    mov rdx, 0x0123456789ABCDEF
-    call screen_print_hex_q
-
-    call screen_nl
-    call screen_print_bin_q
-    
-    mov edi, T_R
-    call screen_print_string
+    call idt_init
+    int 0x10
     jmp $
 
-T_TEST: db "\nHELLO WORLD!\e"
 
-T_R:    db "\nA: \rA\nB: \rB\nC: \rC\nD: \rD\e"
+T_KERNEL_MSG:       db "---KERNEL-IN-64BIT-MODE---\e"
 
 %include "./screen.s"
+%include "./idt.s"

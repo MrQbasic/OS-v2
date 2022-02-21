@@ -177,7 +177,7 @@ screen_print_hex_n:
 screen_print_hex_b:
     ror rdx, 4
     call screen_print_hex_n         ;print the higher N
-    rol rdx ,4
+    rol rdx, 4
     call screen_print_hex_n         ;print the lower N
     ret
 
@@ -261,14 +261,14 @@ DEFAULT_COLOR       equ 0x0A
 
 ;Var
 V_SCREEN_START:     dq 0xB8000
-V_SCREEN_SIZE:      dq 0x007FF ;size in words
+V_SCREEN_SIZE:      dq 0x0075F ;size in words
 
 V_CURSOR:           dw 0x0000  ;is in bytes not in chars!
-V_CURSOR_MAX:       dw 0x1000  ;is in bytes not in chars!
+V_CURSOR_MAX:       dw 0x0EBE  ;is in bytes not in chars!
 
 V_LINE_SIZE:        dw 160     ;num of chars in 1 line (1 char = 2bytes)
 
-HEX:                db "0123456789ABCDEF"
+HEX:                db "0123456789ABCDEF_"
 
 V_A:                dq 0
 V_B:                dq 0

@@ -78,8 +78,8 @@ start:
 	jmp GDT64.Code:kernelstart
 
 reboot:
-    lidt[IDTR]
-IDTR:
+    lidt[rebootidt]
+rebootidt:
     dw 0
     dd 0
 

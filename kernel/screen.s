@@ -100,6 +100,10 @@ screen_print_char:
     ret
 
 screen_print_string:
+    mov [V_A], rax
+    mov [V_B], rbx
+    mov [V_C], rcx
+    mov [V_D], rdx
     push rdi
     push rdx
     .loop1:
@@ -112,7 +116,37 @@ screen_print_string:
         je .exit
         cmp dl, "n"                 ;if \n then new line
         je .nl
+        cmp dl, "r"                 ;if \r then reg print
+        je .reg
         jmp .cmdret                 ;if nothing is found then goto cmdret
+    .reg:
+        inc rdi                     ;set pointer to next char
+        mov dl, [rdi]               ;get the char
+        cmp dl, "A"                 ;-> print rax
+        je .A
+        cmp dl, "B"                 ;-> print rbx
+        je .B
+        cmp dl, "C"                 ;-> print rcx
+        je .C
+        cmp dl, "D"                 ;-> print rdx  
+        je .D
+        jmp .cmdret                 ;if nothing is found then cmdret
+        .A:
+            mov rdx, [V_A]
+            call screen_print_hex_q
+            jmp .cmdret
+        .B:
+            mov rdx, [V_B]
+            call screen_print_hex_q
+            jmp .cmdret
+        .C:
+            mov rdx, [V_C]
+            call screen_print_hex_q
+            jmp .cmdret
+        .D:
+            mov rdx, [V_D]
+            call screen_print_hex_q
+            jmp .cmdret
     .nl:
         call screen_nl
         jmp .cmdret
@@ -235,3 +269,8 @@ V_CURSOR_MAX:       dw 0x1000  ;is in bytes not in chars!
 V_LINE_SIZE:        dw 160     ;num of chars in 1 line (1 char = 2bytes)
 
 HEX:                db "0123456789ABCDEF"
+
+V_A:                dq 0
+V_B:                dq 0
+V_C:                dq 0
+V_D:                dq 0

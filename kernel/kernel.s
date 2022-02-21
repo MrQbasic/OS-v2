@@ -10,8 +10,13 @@ kernelstart:
 
     call screen_nl
     call screen_print_bin_q
+    
+    mov edi, T_R
+    call screen_print_string
     jmp $
 
 T_TEST: db "\nHELLO WORLD!\e"
+
+T_R:    db "\nA: \rA\nB: \rB\nC: \rC\nD: \rD\e"
 
 %include "./screen.s"

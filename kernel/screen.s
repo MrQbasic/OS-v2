@@ -3,6 +3,11 @@
 ;screen_nl
 ;screen_print_char         dl = char
 ;screen_print_string       rdi = pointer to string
+;screeb_print_hex_n        dl = val (low)
+;screen_print_hex_b        dl = val
+;screen_print_hex_w        dx = val
+;screen_print_hex_d       edx = val
+;screen_print_hex_q       rdx = val
 ;-------------------------------------------------------------------------------------------
 screen_clear:
     push rcx
@@ -94,20 +99,57 @@ screen_print_string:
     .nl:
         call screen_nl
         jmp .cmdret
-
     .cmdret:
         inc rdi                     ;set pointer to next byte
         jmp .loop1                  ;loop to start
-
     .nocmd:
         call screen_print_char      ;print char
         inc rdi                     ;set pointer to next byte
         jmp .loop1                  ;loop to start
-
     .exit:
         pop rdx
         pop rdi
         ret
+
+screen_print_hex_n:
+    push rdx
+    push rdi
+    and rdx, 0xF                    ;get only 1 N
+    mov rdi, HEX                    ;get a pointer to the HEX char table
+    add rdi, rdx                    ;add the val as an offset to the pointer
+    mov dl, [rdi]                   ;get the char
+    call screen_print_char          ;print the char
+    pop rdi
+    pop rdx
+    ret
+
+screen_print_hex_b:
+    ror rdx, 4
+    call screen_print_hex_n         ;print the higher N
+    rol rdx ,4
+    call screen_print_hex_n         ;print the lower N
+    ret
+
+screen_print_hex_w:
+    ror rdx, 8
+    call screen_print_hex_b         ;print the higher byte
+    rol rdx, 8
+    call screen_print_hex_b         ;print the lower byte
+    ret
+
+screen_print_hex_d:
+    ror rdx, 16
+    call screen_print_hex_w         ;print the higher word
+    rol rdx, 16
+    call screen_print_hex_w         ;print the lower word
+    ret
+
+screen_print_hex_q:
+    ror rdx, 32
+    call screen_print_hex_d         ;print the higher dword
+    rol rdx, 32
+    call screen_print_hex_d         ;print the lower qword
+    ret
 
 ;-------------------------------------------------------------------------------------------
 ;Const
@@ -121,3 +163,5 @@ V_CURSOR:           dw 0x0000  ;is in bytes not in chars!
 V_CURSOR_MAX:       dw 0x1000  ;is in bytes not in chars!
 
 V_LINE_SIZE:        dw 160     ;num of chars in 1 line (1 char = 2bytes)
+
+HEX:                db "0123456789ABCDEF"

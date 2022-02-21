@@ -1,5 +1,6 @@
 ;screen_clear
 ;screen_lineup
+;screen_linestart
 ;screen_nl
 ;screen_print_char         dl = char
 ;screen_print_string       rdi = pointer to string
@@ -56,11 +57,8 @@ screen_nl:
     push rax
     push rbx
     push rdx
-    mov ax, [V_CURSOR]              ;get the cursor position
+    call screen_linestart           ;set cursor to start of line
     mov bx, [V_LINE_SIZE]           ;get the size of 1 line
-    xor dx, dx                      ;set dx to 0 for div
-    div bx                          ;ax dx = cursor / line_size
-    sub [V_CURSOR], dx              ;cursor = cursor - remainder div -> setting it so the start of the line
     add [V_CURSOR], bx              ;cursor = cursor + line_size -> setting it to the next line
     mov ax, [V_CURSOR]              ;set new cursor position
     cmp ax, [V_CURSOR_MAX]          ;is new cursor pos > cursor_max pos then lineup
@@ -68,6 +66,22 @@ screen_nl:
     call screen_lineup              ;call lineup
     .skipp:
     pop rdx
+    pop rbx
+    pop rax
+    ret
+
+screen_linestart:
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    mov ax, [V_CURSOR]              ;get the cursor position
+    mov bx, [V_LINE_SIZE]           ;get the size of 1 line
+    xor dx, dx                      ;set dx to 0 for div
+    div bx                          ;ax dx = cursor / line_size
+    sub [V_CURSOR], dx              ;cursor = cursor - remainder div -> setting it so the start of the line
+    pop rdx
+    pop rcx
     pop rbx
     pop rax
     ret

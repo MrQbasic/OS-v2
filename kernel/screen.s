@@ -3,11 +3,16 @@
 ;screen_nl
 ;screen_print_char         dl = char
 ;screen_print_string       rdi = pointer to string
-;screeb_print_hex_n        dl = val (low)
+;screen_print_hex_n        dl = val (low)
 ;screen_print_hex_b        dl = val
 ;screen_print_hex_w        dx = val
 ;screen_print_hex_d       edx = val
 ;screen_print_hex_q       rdx = val
+;screen_print_bin_n        dl = val (low)
+;screen_print_bin_b        dl = val
+;screen_print_bin_w        dx = val
+;screen_print_bin_d       edx = val
+;screen_print_bin_q       rdx = val
 ;-------------------------------------------------------------------------------------------
 screen_clear:
     push rcx
@@ -149,6 +154,59 @@ screen_print_hex_q:
     call screen_print_hex_d         ;print the higher dword
     rol rdx, 32
     call screen_print_hex_d         ;print the lower qword
+    ret
+
+screen_print_bin_n:
+    push rcx
+    push rdx 
+    mov rcx, 4                      ;set counter to 4 1N = 4 bits
+    ror rdx, 3                      ;offset val so bit 3 of val is at position 0
+    .loop1:
+        test rdx, 0x1               ;test if the first bit is a 1
+        jz .skipp1
+            push rdx
+            mov dl, "1"             ;set char to "1"
+            call screen_print_char  ;write char
+            pop rdx
+        jmp .skipp2                 ;goto skipp2
+    .skipp1:
+        push rdx
+        mov dl, "0"                 ;set char to "0"
+        call screen_print_char      ;write char
+        pop rdx
+    .skipp2:
+        rol rdx, 1                  ;shift val 1 bit left
+        loop .loop1
+    pop rdx
+    pop rcx
+    ret
+
+screen_print_bin_b:
+    ror rdx, 4
+    call screen_print_bin_n
+    rol rdx, 4
+    call screen_print_bin_n
+    ret
+
+screen_print_bin_w:
+    ror rdx, 8
+    call screen_print_bin_b
+    rol rdx, 8
+    call screen_print_bin_b
+    ret
+
+screen_print_bin_d:
+    ror rdx, 16
+    call screen_print_bin_w
+    rol rdx, 16
+    call screen_print_bin_w
+    ret
+
+screen_print_bin_q:
+    ror rdx, 32
+    call screen_print_bin_d
+    rol rdx, 32
+    call screen_print_bin_d
     ret
 
 ;-------------------------------------------------------------------------------------------

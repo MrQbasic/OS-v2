@@ -73,7 +73,6 @@ screen_nl:
 screen_linestart:
     push rax
     push rbx
-    push rcx
     push rdx
     mov ax, [V_CURSOR]              ;get the cursor position
     mov bx, [V_LINE_SIZE]           ;get the size of 1 line
@@ -81,7 +80,6 @@ screen_linestart:
     div bx                          ;ax dx = cursor / line_size
     sub [V_CURSOR], dx              ;cursor = cursor - remainder div -> setting it so the start of the line
     pop rdx
-    pop rcx
     pop rbx
     pop rax
     ret

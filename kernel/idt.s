@@ -103,6 +103,8 @@ V_DReg:         dq 0
 T_INT:          db "\nINT!\e"
 ;-------------------------------------------------------------------------------------------
 isr_default:
+    mov edi, T_INT
+    call screen_print_string
     jmp $
     push rax
 	mov al, 0x20

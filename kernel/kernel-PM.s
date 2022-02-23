@@ -76,13 +76,11 @@ start:
     ;setup GDT
     lgdt [GDT64.Pointer] 
 	jmp GDT64.Code:kernelstart
-
 reboot:
     lidt[rebootidt]
 rebootidt:
     dw 0
     dd 0
-
 ;-------------------------------------------------------------------------------------------
 PML4_BASE equ 0x70000
 CR0_PE    equ 1 << 0

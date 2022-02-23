@@ -1,4 +1,4 @@
-;idt_setreg            ax = size
+;idt_setreg            ax = number of entries
 ;idt_set               rax = offset / bx = SegmenSelector / cx = idte / dx = Flags
 ;idt_init
 ;-------------------------------------------------------------------------------------------
@@ -15,7 +15,7 @@ idt_init:
         inc rcx                     ;counter += 1
         cmp rcx, 0xFF
         jle .loop1
-    mov ax, 0xFF 
+    mov ax, 0xFF
     call idt_setreg
     pop rcx
     pop rax
@@ -69,19 +69,19 @@ idt_set:
 
 idt_setreg:
     push rcx
-    cmp ax, 0                       ;is size = 0
+    cmp ax, 0                       ;is ax = 0
     je .error                       ;if yes then error out
-    mov rdi, [V_IDT_BASE]           ;get the IDT_BASE_ADDR
-    mov [IDTR.offset], rdi          ;set the offset
-    mov cx, 16                      ;setup 16 for mul
-    mul cx                          ;size = size * 16
-    add ax, 16                      ;set size += 16
-    mov [IDTR.size], ax             ;set the size
-    cli
-    lidt[IDTR]                      ;load IDTR
-    ;sti
+    mov cx, 16                      ;pepare for mul
+    mul cx                          ;mul number of entries * size of one (16)
+    add ax, 15                      ;add 1entrysize - 1
+    mov [IDTR.size], ax             ;set IDTR size
+    mov edi, [V_IDT_BASE]           ;get the idt offset
+    mov [IDTR.offset], edi          ;set IDTR offset
+    cli                             ;dissable irqs
+    lidt [IDTR]                     ;load IDTR 
     pop rcx
     ret
+
     .error:
         mov rdi, T_E_IDTR           ;set pointer to error string
         call screen_print_string    ;print error string
@@ -103,9 +103,9 @@ V_DReg:         dq 0
 T_INT:          db "\nINT!\e"
 ;-------------------------------------------------------------------------------------------
 isr_default:
+    jmp $
     push rax
 	mov al, 0x20
     out 0x20, al
     pop rax
-    jmp $
-	iretq
+	iretq 

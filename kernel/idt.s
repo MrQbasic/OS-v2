@@ -47,15 +47,15 @@ idt_set:
     mov [rdi], ebx                  ;write it
     ;dword 1
     mov rax, [V_AReg]               ;ger Offset back
-    and rax, 0xFFFF0000             ;get scond lowest word of the offset
+    and eax, 0xFFFF0000             ;get scond lowest word of the offset
     mov rbx, [V_DReg]               ;get flags back
     and edx, 0xFFFF                 ;filter flags
     or eax, ebx                     ;or both together
     mov [rdi+4], eax                ;write it
     ;dword 2
     mov rax, [V_AReg]               ;get Offset back
-    and rax, 0xFFFFFFFF00000000     ;get higher dword
-    mov [rdi+8], rax                ;write it
+    shr rax, 32                     ;get higher dword
+    mov [rdi+8], eax                ;write it
     ;dword 3
     xor ebx, ebx                    ;zero ebx
     mov [rdi+12], ebx               ;write it
@@ -69,16 +69,18 @@ idt_set:
 
 idt_setreg:
     push rcx
+    push rdi
     cmp ax, 0                       ;is ax = 0
     je .error                       ;if yes then error out
     mov cx, 16                      ;pepare for mul
     mul cx                          ;mul number of entries * size of one (16)
     add ax, 15                      ;add 1entrysize - 1
     mov [IDTR.size], ax             ;set IDTR size
-    mov edi, [V_IDT_BASE]           ;get the idt offset
-    mov [IDTR.offset], edi          ;set IDTR offset
+    mov rdi, [V_IDT_BASE]           ;get the idt offset
+    mov [IDTR.offset], rdi          ;set IDTR offset
     cli                             ;dissable irqs
-    lidt [IDTR]                     ;load IDTR 
+    lidt [IDTR]                     ;load IDTR
+    pop rdi 
     pop rcx
     ret
 

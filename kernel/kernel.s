@@ -10,6 +10,7 @@ kernelstart:
 
 
 T_KERNEL_MSG:       db "---KERNEL-IN-64BIT-MODE---\e"
+T_KERNEL_END:       db "\n Done with boot process "
 
 %include "./screen.s"
 %include "./idt.s"

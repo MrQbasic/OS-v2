@@ -6,4 +6,8 @@ Windows:
 + Compile: wmake/make.bat
 + Run: wmake/run.bat
 
+Linux:
++ Compile: lmake/make.sh
++ Run: lamke/run.sh
+
 THIS PROJECT IS NOT 100% WORKING!

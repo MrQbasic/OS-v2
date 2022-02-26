@@ -8,6 +8,6 @@ Windows:
 
 Linux:
 + Compile: lmake/make.sh
-+ Run: lamke/run.sh
++ Run: lmake/run.sh
 
 THIS PROJECT IS NOT 100% WORKING!

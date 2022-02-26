@@ -33,11 +33,7 @@ idt_set:
     mul cx                          ;16 times the IDTE_NUM
     and rax, 0xFFFF                 ;get the lowes word of rax
     add rdi, rax                    ;add as an offset to pointer
-    mov rdx, rdi
-    call screen_print_hex_q
-    call screen_nl
     mov rax, [V_AReg]
-    mov rdx, [V_DReg]
     ;dword 0
     mov rbx, [V_BReg]
     mov rax, [V_AReg]
@@ -74,7 +70,7 @@ idt_setreg:
     je .error                       ;if yes then error out
     mov cx, 16                      ;pepare for mul
     mul cx                          ;mul number of entries * size of one (16)
-    add ax, 15                      ;add 1entrysize - 1
+    add ax, 15                      ;add 1 entrys size - 1
     mov [IDTR.size], ax             ;set IDTR size
     mov rdi, [V_IDT_BASE]           ;get the idt offset
     mov [IDTR.offset], rdi          ;set IDTR offset
@@ -105,11 +101,8 @@ V_DReg:         dq 0
 T_INT:          db "\nINT!\e"
 ;-------------------------------------------------------------------------------------------
 isr_default:
-    mov edi, T_INT
+    push rdi
+    mov rdi, T_INT
     call screen_print_string
-    jmp $
-    push rax
-	mov al, 0x20
-    out 0x20, al
-    pop rax
-	iretq 
+    pop rdi
+    iretq 

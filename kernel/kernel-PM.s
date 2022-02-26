@@ -1,6 +1,6 @@
 [org 0x1000]
 [bits 16]
-    ;kill cursor
+        ;kill cursor
 	mov ah, 0x01
 	mov cx, 0x2607
 	int 0x10
@@ -54,10 +54,10 @@ start:
     mov ebx, 0x00000003
     mov ecx, 512
     loop1:
-        mov dword [edi], ebx
-        add ebx, 0x1000
-        add edi, 8
-        loop loop1
+    mov dword [edi], ebx
+    add ebx, 0x1000
+    add edi, 8
+    loop loop1
     mov eax, cr4
     or eax, (1 << 5)
     mov cr4, eax
@@ -75,7 +75,13 @@ start:
     mov cr0, ebx
     ;setup GDT
     lgdt [GDT64.Pointer] 
-	jmp GDT64.Code:kernelstart
+    mov ax, GDT64.Data
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+    jmp GDT64.Code:kernelstart
 reboot:
     lidt[rebootidt]
 rebootidt:
@@ -91,7 +97,7 @@ EFER_LME  equ 1 << 8
 ;---GDT-TO-ENTER-PM---
 gdt_start:
 gdt_null:
-	dd 0
+dd 0
 	dd 0
 gdt_code:
 	dw 0xffff

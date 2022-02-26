@@ -5,7 +5,7 @@ kernelstart:
     call screen_print_string
 
     call idt_init
-    int 0x0
+    int 0x70
     jmp $
 
 

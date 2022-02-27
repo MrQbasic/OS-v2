@@ -101,8 +101,5 @@ V_DReg:         dq 0
 T_INT:          db "\nINT!\e"
 ;-------------------------------------------------------------------------------------------
 isr_default:
-    push rdi
-    mov rdi, T_INT
-    call screen_print_string
-    pop rdi
+    call pic_EOI
     iretq 

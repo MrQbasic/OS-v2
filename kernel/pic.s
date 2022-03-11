@@ -53,7 +53,17 @@ pic_remap:
     ret
 
 pic_eoi:
-    pus
+    push rax
+    push rdx
+    mov al, PIC_EOI             ;EOI cmd
+    mov dx, PIC_1_CMD           ;PIC_1_CMD port
+    mov dx, al                  ;send EOI cmd to PIC_1_CMD
+    mov dx, PIC_2_CMD           ;PIC_2_CMD port
+    mov dx, al                  ;send EOI cmd to PIC_2_CMD
+    ;return
+    pop rdx
+    pop rax
+    ret
 ;-------------------------------------------------------------------------------------------
 ;Const
 ;IO Ports

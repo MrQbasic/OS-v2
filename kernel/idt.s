@@ -101,5 +101,9 @@ V_DReg:         dq 0
 T_INT:          db "\nINT!\e"
 ;-------------------------------------------------------------------------------------------
 isr_default:
-    call pic_EOI
+    mov al, 0x20    ;EOI
+    mov dx, 0x20    ;PIC_1_CMD
+    out dx, al      ;send EOI to PIC_1_CMD
+    mov dx, 0xA0    ;PIC_2_CMD
+    out dx, al      ;send EOI to PIC_2_CMD
     iretq 

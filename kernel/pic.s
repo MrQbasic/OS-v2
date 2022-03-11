@@ -1,16 +1,18 @@
 ;pic_remap        bl = PIC_1 Offset / bh = PIC_2 Offset
+;pic_eoi
 ;-------------------------------------------------------------------------------------------
 [bits 64]
 pic_remap:
     push rax
+    push rcx
     push rdx
     ;save marks
     mov dx, PIC_1_DATA          ;PIC_1_DATA port
     in al, dx                   ;get PIC_1_DATA
-    mov dl, al                  ;save it in dl
+    mov cl, al                  ;save it in cl
     mov dx, PIC_2_DATA          ;PIC_2_DATA port
     in al, dx                   ;get PIC_2_DATA
-    mov dh, al                  ;save it in dh
+    mov ch, al                  ;save it in ch
     ;ICW1 - send init to both PICs
     mov al, (PIC_ICW1_INIT | PIC_ICW1_ICW4) ;INIT cmd
     mov dx, PIC_1_CMD           ;PIC_1_CMD port
@@ -38,18 +40,20 @@ pic_remap:
     mov dx, PIC_2_DATA          ;PIC_2_DATA port
     out dx, al                  ;send cgf ti PIC_2_DATA port
     ;restore marks
-    mov al, dl                  ;get dl (saved marks of PIC_1)
+    mov al, cl                  ;get cl (saved marks of PIC_1)
     mov dx, PIC_1_DATA          ;PIC_1_DATA port
-    out dx, al                  ;send dl to PIC_1_DATA
-    mov al, dh                  ;get dh (saved marks of PIC_2)
+    out dx, al                  ;send cl to PIC_1_DATA
+    mov al, ch                  ;get ch (saved marks of PIC_2)
     mov dx, PIC_2_DATA          ;PIC_2_DATA port
-    out dx, al                  ;send dh to PIC_2_DATA
+    out dx, al                  ;send ch to PIC_2_DATA
     ;return
     pop rdx
+    pop rcx
     pop rax
     ret
 
-
+pic_eoi:
+    pus
 ;-------------------------------------------------------------------------------------------
 ;Const
 ;IO Ports

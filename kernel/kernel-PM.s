@@ -66,12 +66,14 @@ start:
     mov cr4, eax
     mov eax, PML4_BASE
     mov cr3, eax
+
     mov ecx, 0xC0000080
     rdmsr
     or eax, EFER_LME
     wrmsr
+
     mov ebx, cr0
-    or ebx, (CR0_PG | CR0_PE)
+    or ebx, (CR0_PG)
     mov cr0, ebx
     ;setup GDT
     lgdt [GDT64.Pointer] 
@@ -82,6 +84,7 @@ start:
     mov gs, ax
     mov ss, ax
     jmp GDT64.Code:kernelstart
+
 reboot:
     lidt[rebootidt]
 rebootidt:
@@ -97,7 +100,7 @@ EFER_LME  equ 1 << 8
 ;---GDT-TO-ENTER-PM---
 gdt_start:
 gdt_null:
-dd 0
+    dd 0
 	dd 0
 gdt_code:
 	dw 0xffff

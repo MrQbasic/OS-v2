@@ -66,12 +66,10 @@ start:
     mov cr4, eax
     mov eax, PML4_BASE
     mov cr3, eax
-
     mov ecx, 0xC0000080
     rdmsr
     or eax, EFER_LME
     wrmsr
-
     mov ebx, cr0
     or ebx, (CR0_PG)
     mov cr0, ebx
@@ -147,9 +145,6 @@ GDT64:
         db PRESENT | NOT_SYS | RW
         db GRAN_4K | SZ_32 | 0xF
         db 0
-    .TSS: equ $ - GDT64
-        dd 0x00000068
-        dd 0x00CF8900
     .Pointer:
         dw $ - GDT64 - 1
         dq GDT64

@@ -1,13 +1,10 @@
 while(True):
     dw1 = int(input("DW1: "),16) & 0xFFFFFFFF
     dw2 = int(input("DW2: "),16) & 0xFFFFFFFF
-    dw3 = int(input("DW3: "),16) & 0xFFFFFFFF
-    dw4 = int(input("DW4: "),16) & 0xFFFFFFFF
 
     base = (dw1 & 0xFFFF0000) >> 16
     base += (dw2 & 0xFF) << 16
     base += (dw2 & 0xFF000000)
-    base += (dw3 & 0xFFFFFFFF) << 32
 
     limit = (dw1 & 0xFFFF)
     limit += (dw2 & 0xFF0000)

@@ -7,7 +7,7 @@ idt_init:
     push rax
     push rcx
     mov rax, isr_default            ;setup offset
-    mov bx, 0                       ;setup segment selector
+    mov bx, 0x8                     ;setup segment selector
     mov dx, 0x8E00                  ;setup flags (64-bit intr kernel gate)
     xor rcx, rcx                    ;zero counter
     .loop1:
@@ -70,7 +70,7 @@ idt_setreg:
     je .error                       ;if yes then error out
     mov cx, 16                      ;pepare for mul
     mul cx                          ;mul number of entries * size of one (16)
-    add ax, 15                      ;add 1 entrys size - 1
+    add ax, 16                      ;add 1 entrys size - 1
     mov [IDTR.size], ax             ;set IDTR size
     mov rdi, [V_IDT_BASE]           ;get the idt offset
     mov [IDTR.offset], rdi          ;set IDTR offset
@@ -101,5 +101,9 @@ V_DReg:         dq 0
 T_INT:          db "\nINT!\e"
 ;-------------------------------------------------------------------------------------------
 isr_default:
+
+    mov rdi, T_INT
+    call screen_print_string
+
     call pic_eoi
     iretq 

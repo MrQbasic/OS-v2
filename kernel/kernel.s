@@ -19,11 +19,13 @@ kernelstart:
 
     ;init idt
     call idt_init
-    ;int 0x0
+    int 0x1
 
     ;print done string
     mov rdi, T_MSG_END
     call screen_print_string
+
+    int 0x2
     jmp $
 
 

@@ -3,12 +3,13 @@
 [bits 64]
 
 exc_init:
+    cli
     push rax
     push rbx
     push rcx
     push rdx
     ;setup acb and flags
-    mov bx, 0
+    mov bx, 0x8
     mov dx, 0x8E00
     ;setup ervery isr
     mov cx, 0
@@ -17,57 +18,72 @@ exc_init:
     mov cx, 1
     mov rax, exc_isr_1
     call idt_set
-    mov cx, 2
+    mov cx, 3
     mov rax, exc_isr_3
     call idt_set
-    mov cx, 3
-    mov rax, exc_isr_0
-    call idt_set
     mov cx, 4
-    mov rax, exc_isr_0
+    mov rax, exc_isr_4
     call idt_set
     mov cx, 5
-    mov rax, exc_isr_0
+    mov rax, exc_isr_5
     call idt_set
     mov cx, 6
-    mov rax, exc_isr_0
+    mov rax, exc_isr_6
     call idt_set
     mov cx, 7
-    mov rax, exc_isr_0
+    mov rax, exc_isr_7
     call idt_set
     mov cx, 8
-    mov rax, exc_isr_0
+    mov rax, exc_isr_8
     call idt_set
     mov cx, 10
-    mov rax, exc_isr_0
+    mov rax, exc_isr_10
     call idt_set
     mov cx, 11
-    mov rax, exc_isr_0
+    mov rax, exc_isr_11
     call idt_set
     mov cx, 12
-    mov rax, exc_isr_0
+    mov rax, exc_isr_12
     call idt_set
-    mov cx, 0
-    mov rax, exc_isr_0
+    mov cx, 13
+    mov rax, exc_isr_13
     call idt_set
-    mov cx, 0
-    mov rax, exc_isr_0
+    mov cx, 14
+    mov rax, exc_isr_14
     call idt_set
-    mov cx, 0
-    mov rax, exc_isr_0
+    mov cx, 16
+    mov rax, exc_isr_16
     call idt_set
-    mov cx, 0
-    mov rax, exc_isr_0
+    mov cx, 17
+    mov rax, exc_isr_17
     call idt_set
-    mov cx, 0
-    mov rax, exc_isr_0
+    mov cx, 18
+    mov rax, exc_isr_18
     call idt_set
+    mov cx, 19
+    mov rax, exc_isr_19
+    call idt_set
+    mov cx, 20
+    mov rax, exc_isr_20
+    call idt_set
+    mov cx, 21
+    mov rax, exc_isr_21
+    call idt_set
+    mov cx, 28
+    mov rax, exc_isr_28
+    call idt_set
+    mov cx, 29
+    mov rax, exc_isr_29
+    call idt_set
+    mov cx, 30
+    mov rax, exc_isr_30
 
     ;return
     pop rdx
     pop rcx
     pop rbx
     pop rax
+    sti 
     ret
 
 ;-------------------------------------------------------------------------------------------

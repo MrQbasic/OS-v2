@@ -11,26 +11,27 @@ kernelstart:
     call pic_remap
     mov rdi, T_MSG_PIC
     call screen_print_string
+    
+    ;init idt
+    call idt_init
+    mov rdi, T_MSG_IDT
+    call screen_print_string
 
     ;setup exception handler
     call exc_init
     mov rdi, T_MSG_EXC
     call screen_print_string
 
-    ;init idt
-    call idt_init
-    int 0x1
-
     ;print done string
     mov rdi, T_MSG_END
     call screen_print_string
 
-    int 0x2
     jmp $
 
 
 T_MSG_KERNEL:       db "---KERNEL-IN-64BIT-MODE---\e"
 T_MSG_PIC:          db "\nRemaped IRQs\e"
+T_MSG_IDT:          db "\nEnable IDT\e"
 T_MSG_EXC:          db "\nSetup exception handler\e"
 T_MSG_END:          db "\nDone with boot process \e"
 

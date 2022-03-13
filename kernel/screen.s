@@ -2,6 +2,7 @@
 ;screen_lineup
 ;screen_linestart
 ;screen_nl
+;screen_stackdump
 ;screen_print_char         dl = char
 ;screen_print_string       rdi = pointer to string
 ;screen_print_hex_n        dl = val (low)
@@ -255,6 +256,29 @@ screen_print_bin_q:
     call screen_print_bin_d
     ret
 
+screen_stackdump:
+    push rdi 
+    push rdx
+    push rcx
+    ;get the stack size
+    mov edx, ebp                ;get stack base addr 
+    sub edx, esp                ;stakc base addr - stack pointer addr = stack size
+    mov rdi, T_SIZE             ;set pointer to string
+    call screen_print_string    ;print string
+    call screen_print_hex_d     ;print number -> stack size
+    xor rcx, rcx
+    mov ecx, edx
+    ;print the stack
+    .loop1:
+        pop rdx
+        call screen_nl
+        call screen_print_hex_q
+        loop .loop1
+    ;return
+    pop rcx 
+    pop rdx
+    pop rdi
+    ret 
 ;-------------------------------------------------------------------------------------------
 ;Const
 DEFAULT_COLOR       equ 0x0A
@@ -274,3 +298,5 @@ V_A:                dq 0
 V_B:                dq 0
 V_C:                dq 0
 V_D:                dq 0
+
+T_SIZE:             db "\nSize: \e"

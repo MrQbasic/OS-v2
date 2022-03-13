@@ -41,7 +41,7 @@ kernelstart:
     call screen_print_string
 
     mov rax, 0
-    mov rbx, 0
+    mov rbx, 0x1000
     call page_map
 
     jmp $

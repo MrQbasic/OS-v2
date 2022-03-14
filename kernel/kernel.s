@@ -40,8 +40,9 @@ kernelstart:
     mov rdi, T_MSG_END
     call screen_print_string
 
-    mov rax, 0
-    mov rbx, 0x1000
+    mov cl, 0b00000011
+    mov rax, 0x1000
+    mov rbx, 0x90000
     call page_map
 
     jmp $
@@ -63,3 +64,4 @@ V_L_ADDR_BITS:      db 0
 %include "./pic.s"
 %include "./exception.s"
 %include "./pageing.s"
+%include "./math.s"

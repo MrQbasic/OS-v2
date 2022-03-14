@@ -63,3 +63,4 @@ V_L_ADDR_BITS:      db 0
 %include "./pic.s"
 %include "./exception.s"
 %include "./pageing.s"
+%include "./math.s"

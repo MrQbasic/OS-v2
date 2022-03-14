@@ -1,3 +1,4 @@
+[org 0x10000000000]
 [bits 64]
 kernelstart:
     ;clear screen
@@ -41,8 +42,8 @@ kernelstart:
     call screen_print_string
 
     mov cl, 0b00000011
+    mov rbx, 0x9000
     mov rax, 0x1000
-    mov rbx, 0x90000
     call page_map
 
     jmp $

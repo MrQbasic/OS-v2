@@ -1,6 +1,6 @@
 [org 0x1000]
 [bits 16]
-        ;kill cursor
+    ;kill cursor
 	mov ah, 0x01
 	mov cx, 0x2607
 	int 0x10
@@ -81,7 +81,7 @@ start:
     mov fs, ax
     mov gs, ax
     mov ss, ax
-    jmp GDT64.Code:kernelstart
+    jmp GDT64.Code:kernel64
 
 reboot:
     lidt[rebootidt]
@@ -149,5 +149,32 @@ GDT64:
         dw $ - GDT64 - 1
         dq GDT64
 ;---------------------------------------------------------
-%include "./kernel.s"
+kernelstart equ 0x10000000000
+;---------------------------------------------------------
+%include "./pageing.s"
+%include "./math.s"
+%include "./screen.s"
+V_P_ADDR_BITS:      db 0
+[bits 64]
+kernel64:
+    ;clear screen
+    call screen_clear
+    ;get pAddr width
+    mov eax, 0x80000008
+    cpuid
+    mov [V_P_ADDR_BITS], al
+    ;map kernel
+    mov dl, 10
+    mov cl, 0b00000011
+    mov rax, next_kernel
+    mov rbx, kernelstart
+    .loop1:
+        call page_map
+        dec dl
+        jnz .loop1
+
+    jmp kernelstart
+
+align 0x1000                               ;align for next kernel part to start at an known address to page map
+next_kernel:
 ;https://wiki.osdev.org/Setting_Up_Long_Mode

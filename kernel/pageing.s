@@ -20,6 +20,7 @@ page_map:
     ;get the PML4 addr from cr3
     mov rdx, cr3    
     mov [page_pml4_base], rdx
+    .reentry:
     ;get pointer to PML4E
     mov rbx, [page_buffer_v_addr]
     mov rdx, 0xFF8000000000
@@ -31,6 +32,8 @@ page_map:
     mov rbx, [rax]
     mov [page_pml4e], rbx
     ;get the PDPT_base from PML4E
+    test rbx, 1
+    jz .no_pml4e
     and rbx, [page_filter]
     mov [page_pdpt_base], rbx
     ;get the PDPTE
@@ -44,6 +47,8 @@ page_map:
     mov rbx, [rax]
     mov [page_pdpte], rbx
     ;get the PD_base from PDPTE
+    test rbx, 1
+    jz .no_pdpt
     and rbx, [page_filter]
     mov [page_pd_base], rbx
     ;get the PDE
@@ -57,6 +62,8 @@ page_map:
     mov rbx, [rax]
     mov [page_pde], rbx
     ;get the PT_base from PDE
+    test rbx, 1
+    jz .no_pd
     and rbx, [page_filter]
     mov [page_pt_base], rbx
     ;set the PTE
@@ -67,19 +74,13 @@ page_map:
     mov rax, 8
     mul rbx
     add rax, [page_pt_base]
-
+    mov rbx, [rax]
+    test rbx, 1
+    jz .no_pt
     mov rbx, [page_buffer_p_addr]
     and rbx, [page_filter]
     or bl, [page_buffer_flags]
-
     mov [rax], rbx
-
-
-    mov rdx, rbx
-    call screen_nl
-    call screen_print_hex_q
-
-
     pop rdx
     pop rcx
     pop rbx
@@ -87,6 +88,20 @@ page_map:
     pop rdi
     ret
     .no_pml4e:
+        mov rdi, page_E_pml4
+        call screen_print_string
+        jmp $
+    .no_pdpt:
+        mov rdi, page_E_pdpt
+        call screen_print_string
+        jmp $
+    .no_pd:
+        mov rdi, page_E_pd
+        call screen_print_string
+        jmp $
+    .no_pt:
+        mov rdi, page_E_pt
+        call screen_print_string
         jmp $
 
 ;-------------------------------------------------------------------------------------------
@@ -105,3 +120,8 @@ page_buffer_v_addr: dq 0
 page_buffer_flags:  db 0
 
 page_filter:        dq 0
+
+page_E_pml4:        db "\nERROR->no PML4 entry!\e"
+page_E_pdpt:        db "\nERROR->no PDPT entry!\e"
+page_E_pd:          db "\nERROR->no PD entry!\e"
+page_E_pt:          db "\nERROR->no PT entry!\e"

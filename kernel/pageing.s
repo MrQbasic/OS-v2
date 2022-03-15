@@ -90,18 +90,37 @@ page_map:
     .no_pml4e:
         mov rdi, page_E_pml4
         call screen_print_string
+        mov rdx, [page_buffer_v_addr]
+        mov rbx, 0xFF8000000000
+        and rdx, rbx
+        shr rdx, 27
+        call screen_print_hex_q
         jmp $
     .no_pdpt:
         mov rdi, page_E_pdpt
         call screen_print_string
+        mov rdx, [page_buffer_v_addr]
+        mov rbx, 0x7FC0000000
+        and rdx, rbx
+        shr rdx, 18
+        call screen_print_hex_q
         jmp $
     .no_pd:
         mov rdi, page_E_pd
         call screen_print_string
+        mov rdx, [page_buffer_v_addr]
+        mov rbx, 0x3FE00000
+        and rdx, rbx
+        shr rdx, 9
+        call screen_print_hex_q
         jmp $
     .no_pt:
         mov rdi, page_E_pt
         call screen_print_string
+        mov rdx, [page_buffer_v_addr]
+        mov rbx, 0x1FF000
+        and rdx, rbx
+        call screen_print_hex_q
         jmp $
 
 ;-------------------------------------------------------------------------------------------

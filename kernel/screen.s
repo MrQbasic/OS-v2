@@ -1,3 +1,4 @@
+;screen_space
 ;screen_clear
 ;screen_lineup
 ;screen_linestart
@@ -16,6 +17,13 @@
 ;screen_print_bin_d       edx = val
 ;screen_print_bin_q       rdx = val
 ;-------------------------------------------------------------------------------------------
+screen_space:
+    push rdx
+    mov dl, " "
+    call screen_print_char
+    pop rdx
+    ret
+
 screen_clear:
     push rcx
     push rdi

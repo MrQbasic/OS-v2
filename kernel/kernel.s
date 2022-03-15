@@ -1,9 +1,14 @@
-[org 0x10000000000]
+[org 0x80000000]
 [bits 64]
 kernelstart:
     ;clear screen
     call screen_clear
     mov rdi, T_MSG_KERNEL
+    call screen_print_string
+
+    ;print kernel start addr
+    mov rax, kernelstart
+    mov rdi, T_MSG_SADDR
     call screen_print_string
 
     ;remap IRQs
@@ -50,6 +55,7 @@ kernelstart:
 
 
 T_MSG_KERNEL:       db "---KERNEL-IN-64BIT-MODE---\e"
+T_MSG_SADDR:        db "\nKernel start addr: \rA\e"
 T_MSG_PIC:          db "\nRemaped IRQs\e"
 T_MSG_IDT:          db "\nEnable IDT\e"
 T_MSG_EXC:          db "\nSetup exception handler\e"

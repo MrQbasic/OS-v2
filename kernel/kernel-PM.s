@@ -149,30 +149,64 @@ GDT64:
         dw $ - GDT64 - 1
         dq GDT64
 ;---------------------------------------------------------
-kernelstart equ 0x10000000000
+kernelstart equ 0x80000000
 ;---------------------------------------------------------
 %include "./pageing.s"
 %include "./math.s"
 %include "./screen.s"
+%include "./exception.s"
+%include "./idt.s"
+%include "./pic.s"
 V_P_ADDR_BITS:      db 0
 [bits 64]
 kernel64:
+    ;remap IRQs
+    mov bl, 0x20
+    mov bh, 0x28
+    call pic_remap
+    ;init idt
+    call idt_init
+    ;setup exception handler
+    call exc_init
     ;clear screen
     call screen_clear
     ;get pAddr width
     mov eax, 0x80000008
     cpuid
     mov [V_P_ADDR_BITS], al
-    ;map kernel
+    ;creat pml4 pdpt and pd
+    ;plm4e
+    ;;mov rax, 0x70008
+    ;;mov rbx, 0x74003
+    ;;mov [rax], rbx        
+    ;;add rbx, 0x1000
+    ;pdpte
+    mov rax, 0x71010
+    mov rbx, 0x75003
+    mov [rax], rbx
+    ;pd
+    mov rax, 0x75000
+    mov rbx, 0x76003
+    mov [rax], rbx
+    ;fill pt
+    mov rdi, 0x76000
+    mov rbx, 0x00000003
+    mov rcx, 512
+    .loop1:
+        mov [rdi], rbx
+        add rdi, 8
+        loop .loop1
+    ;map the kernel
     mov dl, 10
     mov cl, 0b00000011
     mov rax, next_kernel
     mov rbx, kernelstart
-    .loop1:
+    .loop2:
         call page_map
+        add rax, 0x1000
+        add rbx, 0x1000
         dec dl
-        jnz .loop1
-
+        jnz .loop2
     jmp kernelstart
 
 align 0x1000                               ;align for next kernel part to start at an known address to page map

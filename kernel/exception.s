@@ -151,7 +151,11 @@ exc_isr_13:
 exc_isr_14:
     mov rdi, T_EXC_14
     call screen_print_string
-    jmp $
+    mov rax , cr2
+    mov rdi, T_CR2
+    call screen_print_string
+    add esp, 4
+    iretq
 
 exc_isr_16:
     mov rdi, T_EXC_16
@@ -172,7 +176,7 @@ exc_isr_19:
     mov rdi, T_EXC_19
     call screen_print_string
     jmp $
-
+    
 exc_isr_20:
     mov rdi, T_EXC_20
     call screen_print_string
@@ -221,3 +225,5 @@ T_EXC_21:         db "\nERROR-> Control Protection Exception\e"
 T_EXC_28:         db "\nERROR-> Hypervisor Injection Exception\e"
 T_EXC_29:         db "\nERROR-> VMM Communication Exception\e"
 T_EXC_30:         db "\nERROR-> Security Exception\e"
+
+T_CR2:            db "\n  cr2: \rA\e"

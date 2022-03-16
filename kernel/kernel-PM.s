@@ -197,7 +197,7 @@ kernel64:
         add rdi, 8
         loop .loop1
     ;map the kernel
-    mov dl, 10
+    mov dx, 512
     mov cl, 0b00000011
     mov rax, next_kernel
     mov rbx, kernelstart
@@ -205,7 +205,7 @@ kernel64:
         call page_map
         add rax, 0x1000
         add rbx, 0x1000
-        dec dl
+        dec dx
         jnz .loop2
     jmp kernelstart
 

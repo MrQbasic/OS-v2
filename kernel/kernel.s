@@ -1,12 +1,7 @@
-[org 0x80000000]
+[org 0x40000000]
 [bits 64]
 kernelstart:
-    ;WHY?
-    mov rbx, V_SCREEN_START
-    mov rdx, [rbx]
-    jmp $
-
-    ;clear screen
+    ;clear screen + start msg
     call screen_clear
     mov rdi, T_MSG_KERNEL
     call screen_print_string

@@ -149,7 +149,7 @@ GDT64:
         dw $ - GDT64 - 1
         dq GDT64
 ;---------------------------------------------------------
-kernelstart equ 0x80000000
+kernelstart equ 0x40000000
 ;---------------------------------------------------------
 %include "./pageing.s"
 %include "./math.s"
@@ -176,12 +176,12 @@ kernel64:
     mov [V_P_ADDR_BITS], al
     ;creat pml4 pdpt and pd
     ;plm4e
-    ;;mov rax, 0x70008
+    ;;mov rax, 0x70010
     ;;mov rbx, 0x74003
     ;;mov [rax], rbx        
     ;;add rbx, 0x1000
     ;pdpte
-    mov rax, 0x71010
+    mov rax, 0x71008
     mov rbx, 0x75003
     mov [rax], rbx
     ;pd
@@ -207,6 +207,7 @@ kernel64:
         add rbx, 0x1000
         dec dx
         jnz .loop2
+
     jmp kernelstart
 
 align 0x1000                               ;align for next kernel part to start at an known address to page map

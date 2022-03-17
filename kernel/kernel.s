@@ -1,4 +1,4 @@
-[org 0x40000000]
+[org 0x80000000]
 [bits 64]
 kernelstart:
     ;clear screen + start msg

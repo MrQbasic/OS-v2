@@ -149,7 +149,7 @@ GDT64:
         dw $ - GDT64 - 1
         dq GDT64
 ;---------------------------------------------------------
-kernelstart equ 0x40000000
+kernelstart equ 0x80000000
 ;---------------------------------------------------------
 %include "./pageing.s"
 %include "./math.s"
@@ -181,7 +181,7 @@ kernel64:
     ;;mov [rax], rbx        
     ;;add rbx, 0x1000
     ;pdpte
-    mov rax, 0x71008
+    mov rax, 0x71010
     mov rbx, 0x75003
     mov [rax], rbx
     ;pd

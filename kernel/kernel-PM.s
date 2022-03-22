@@ -207,8 +207,7 @@ kernel64:
         add rbx, 0x1000
         dec dx
         jnz .loop2
-
-    jmp kernelstart
+    jmp qword kernelstart
 
 align 0x1000                               ;align for next kernel part to start at an known address to page map
 next_kernel:

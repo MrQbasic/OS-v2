@@ -22,34 +22,46 @@ idt_init:
     ret
 
 idt_set:
-    mov [V_AReg], rax
-    mov [V_BReg], rbx
-    mov [V_CReg], rcx
-    mov [V_DReg], rdx
+    push rsi
+    mov rsi, V_AReg
+    mov [rsi], rax
+    mov rsi, V_BReg
+    mov [rsi], rbx
+    mov rsi, V_CReg
+    mov [rsi], rcx
+    mov rsi, V_DReg
+    mov [rsi], rdx
     push rdi
     ;setup pointer
-    mov rdi, [V_IDT_BASE]           ;get a pointer to the base addr of the idt
+    mov rsi, V_IDT_BASE
+    mov rdi, [rsi]                  ;get a pointer to the base addr of the idt
     mov ax, 16                      ;1 IDTE = 16 bytes
     mul cx                          ;16 times the IDTE_NUM
     and rax, 0xFFFF                 ;get the lowes word of rax
     add rdi, rax                    ;add as an offset to pointer
-    mov rax, [V_AReg]
+    mov rsi, V_AReg
+    mov rax, [rsi]
     ;dword 0
-    mov rbx, [V_BReg]
-    mov rax, [V_AReg]
+    mov rsi, V_BReg
+    mov rbx, [rsi]
+    mov rsi, V_AReg
+    mov rax, [rsi]
     shl ebx, 16                     ;set segsel to upper 16 bits
     and eax, 0xFFFF                 ;get bits 0-15 from offset
     or ebx, eax                     ;or both together
     mov [rdi], ebx                  ;write it
     ;dword 1
-    mov rax, [V_AReg]               ;ger Offset back
+    mov rsi, V_AReg
+    mov rax, [rsi]                  ;ger Offset back
     and eax, 0xFFFF0000             ;get scond lowest word of the offset
-    mov rbx, [V_DReg]               ;get flags back
+    mov rsi, V_DReg
+    mov rbx, [rsi]                  ;get flags back
     and edx, 0xFFFF                 ;filter flags
     or eax, ebx                     ;or both together
     mov [rdi+4], eax                ;write it
     ;dword 2
-    mov rax, [V_AReg]               ;get Offset back
+    mov rsi, V_AReg
+    mov rax, [rsi]                  ;get Offset back
     shr rax, 32                     ;get higher dword
     mov [rdi+8], eax                ;write it
     ;dword 3
@@ -57,25 +69,36 @@ idt_set:
     mov [rdi+12], ebx               ;write it
     ;exit
     pop rdi
-    mov rax, [V_AReg]
-    mov rbx, [V_BReg]
-    mov rcx, [V_CReg]
-    mov rdx, [V_DReg]
+    mov rsi, V_AReg
+    mov rax, [rsi]
+    mov rsi, V_BReg
+    mov rbx, [rsi]
+    mov rsi, V_CReg
+    mov rcx, [rsi]
+    mov rsi, V_DReg
+    mov rdx, [rsi]
+    pop rsi
     ret
 
 idt_setreg:
     push rcx
     push rdi
+    push rsi
     cmp ax, 0                       ;is ax = 0
     je .error                       ;if yes then error out
     mov cx, 16                      ;pepare for mul
     mul cx                          ;mul number of entries * size of one (16)
     add ax, 16                      ;add 1 entrys size - 1
-    mov [IDTR.size], ax             ;set IDTR size
-    mov rdi, [V_IDT_BASE]           ;get the idt offset
-    mov [IDTR.offset], rdi          ;set IDTR offset
+    mov rsi, IDTR.size
+    mov [rsi], ax                   ;set IDTR size
+    mov rsi, V_IDT_BASE
+    mov rdi, [rsi]                  ;get the idt offset
+    mov rsi, IDTR.offset
+    mov [rsi], rdi                  ;set IDTR offset
     cli                             ;dissable irqs
-    lidt [IDTR]                     ;load IDTR
+    mov rsi, IDTR
+    lidt [rsi]                      ;load IDTR
+    pop rsi
     pop rdi 
     pop rcx
     ret

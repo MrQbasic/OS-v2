@@ -1,5 +1,5 @@
-[org 0x80000000]
 [bits 64]
+[org 0x80000000]
 kernelstart:
     ;clear screen + start msg
     call screen_clear
@@ -17,7 +17,7 @@ kernelstart:
     call pic_remap
     mov rdi, T_MSG_PIC
     call screen_print_string
-    
+
     ;init idt
     call idt_init
     mov rdi, T_MSG_IDT
@@ -31,8 +31,10 @@ kernelstart:
     ;get the amount of physical address bits
     mov eax, 0x80000008
     cpuid
-    mov [V_P_ADDR_BITS], al
-    mov [V_L_ADDR_BITS], ah
+    mov rsi, V_P_ADDR_BITS
+    mov [rsi], al
+    mov rsi, V_L_ADDR_BITS
+    mov [rsi], ah
     mov edi, T_MSG_PAB
     call screen_print_string
     mov dl, al
@@ -45,12 +47,6 @@ kernelstart:
     ;print done string
     mov rdi, T_MSG_END
     call screen_print_string
-
-    mov cl, 0b00000011
-    mov rbx, 0x9000
-    mov rax, 0x1000
-    call page_map
-
     jmp $
 
 

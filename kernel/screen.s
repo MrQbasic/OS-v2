@@ -27,13 +27,18 @@ screen_space:
 screen_clear:
     push rcx
     push rdi
-    mov rdi, [V_SCREEN_START]       ;set pointer to start of screen mem
-    mov rcx, [V_SCREEN_SIZE]        ;load counter
+    push rsi
+    mov rsi, V_SCREEN_START
+    mov rdi, [rsi]                  ;set pointer to start of screen mem
+    mov rsi, V_SCREEN_SIZE
+    mov rcx, [rsi]                  ;load counter
     .loop1:
         mov word [rdi], 0x0020      ;write color byte
         add edi, 2                  ;set pointer to the next word
         loop .loop1                 ;loop until screen is cleared
-    mov word [V_CURSOR], 0          ;set cursor position to start
+    mov rsi, V_CURSOR
+    mov word [rsi], 0               ;set cursor position to start
+    pop rsi
     pop rdi
     pop rcx
     ret
@@ -42,21 +47,31 @@ screen_lineup:
     push rdi
     push rsi
     push rcx
-    mov rdi, [V_SCREEN_START]       ;set pointer1 to the start of the screenmem
-    mov rsi, [V_SCREEN_START]       ;set pointer2 to the start of the screenmem
-    add si, [V_LINE_SIZE]           ;+= the size of 1 line in word * 2 -> in bytes
-    add si, [V_LINE_SIZE]
-    mov rcx, [V_SCREEN_SIZE]        ;set counter to size of screen mem in words
-    sub cx, [V_LINE_SIZE]           ;-= the size of 1 line in word(chars)
+    push rax
+    push rbx
+    mov rcx, V_SCREEN_START
+    mov rdi, [rcx]                  ;set pointer1 to the start of the screenmem
+    mov rsi, [rcx]                  ;set pointer2 to the start of the screenmem
+    mov rbx, V_LINE_SIZE
+    add si, [rbx]                   ;+= the size of 1 line in word * 2 -> in bytes
+    add si, [rbx]
+    mov rbx, V_SCREEN_SIZE
+    mov rcx, [rbx]                  ;set counter to size of screen mem in words
+    mov rbx, V_LINE_SIZE
+    sub cx, [rbx]                   ;-= the size of 1 line in word(chars)
     .loop1:
         mov ax, [rsi]               ;get word from pointer2
         mov [rdi], ax               ;write the wort pointer1
         add rdi, 2                  ;set pointer1 to next word
         add rsi, 2                  ;set pointer2 to next word
         loop .loop1                 ;loop until counter = 0
-    mov ax, [V_LINE_SIZE]           ;cursor -= 1line
-    add ax, [V_LINE_SIZE]
-    sub [V_CURSOR], ax
+    mov rbx, V_LINE_SIZE
+    mov ax, [rbx]                   ;cursor -= 1line
+    add ax, [rbx]
+    mov rbx, V_CURSOR
+    sub [rbx], ax
+    pop rbx
+    pop rax
     pop rcx
     pop rsi
     pop rdi
@@ -67,10 +82,13 @@ screen_nl:
     push rbx
     push rdx
     call screen_linestart           ;set cursor to start of line
-    mov bx, [V_LINE_SIZE]           ;get the size of 1 line
-    add [V_CURSOR], bx              ;cursor = cursor + line_size -> setting it to the next line
-    mov ax, [V_CURSOR]              ;set new cursor position
-    cmp ax, [V_CURSOR_MAX]          ;is new cursor pos > cursor_max pos then lineup
+    mov rdx, V_LINE_SIZE
+    mov bx, [rdx]                   ;get the size of 1 line
+    mov rdx, V_CURSOR
+    add [rdx], bx                   ;cursor = cursor + line_size -> setting it to the next line
+    mov ax, [rdx]                   ;set new cursor position
+    mov rdx, V_CURSOR_MAX
+    cmp ax, [rdx]                   ;is new cursor pos > cursor_max pos then lineup
     jle .skipp
     call screen_lineup              ;call lineup
     .skipp:
@@ -82,39 +100,55 @@ screen_nl:
 screen_linestart:
     push rax
     push rbx
+    push rcx
     push rdx
-    mov ax, [V_CURSOR]              ;get the cursor position
-    mov bx, [V_LINE_SIZE]           ;get the size of 1 line
+    mov rcx, V_CURSOR
+    mov ax, [rcx]                   ;get the cursor position
+    mov rcx, V_LINE_SIZE
+    mov bx, [rcx]                   ;get the size of 1 line
     xor dx, dx                      ;set dx to 0 for div
     div bx                          ;ax dx = cursor / line_size
-    sub [V_CURSOR], dx              ;cursor = cursor - remainder div -> setting it so the start of the line
+    mov rcx, V_CURSOR
+    sub [rcx], dx                   ;cursor = cursor - remainder div -> setting it so the start of the line
     pop rdx
+    pop rcx
     pop rbx
     pop rax
     ret
 
 screen_print_char:
     push rdi
+    push rsi
     xor rdi, rdi                    ;set pointer to 0
-    mov di, [V_CURSOR]              ;setup pointer to current cursorposition
-    cmp di, [V_CURSOR_MAX]          ;is pointer > schreen size then lineup
+    mov rsi, V_CURSOR
+    mov di, [rsi]                   ;setup pointer to current cursorposition
+    mov rsi, V_CURSOR_MAX
+    cmp di, [rsi]                   ;is pointer > schreen size then lineup
     jle .skipp1
         call screen_lineup          ;call lineup
     .skipp1:
-    add rdi, [V_SCREEN_START]       ;add screenmem start add as offset tro pointer
+    mov rsi, V_SCREEN_START
+    add rdi, [rsi]                  ;add screenmem start add as offset tro pointer
     mov byte [rdi+1], DEFAULT_COLOR ;write the color
     mov [rdi], dl                   ;write the char
-    add word [V_CURSOR], 2          ;set coursor to point to the next char
+    mov rsi, V_CURSOR
+    add word [rsi], 2          ;set coursor to point to the next char
+    pop rsi
     pop rdi
     ret
 
 screen_print_string:
-    mov [V_A], rax
-    mov [V_B], rbx
-    mov [V_C], rcx
-    mov [V_D], rdx
     push rdi
+    push rsi
     push rdx
+    mov rsi, V_A
+    mov [rsi], rax
+    mov rsi, V_B
+    mov [rsi], rbx
+    mov rsi, V_C
+    mov [rsi], rcx
+    mov rsi, V_D
+    mov [rsi], rdx
     .loop1:
         mov dl, [rdi]               ;get the char
         cmp dl, "\"                 ;is char a cmd prefix
@@ -140,20 +174,24 @@ screen_print_string:
         cmp dl, "D"                 ;-> print rdx  
         je .D
         jmp .cmdret                 ;if nothing is found then cmdret
-        .A:
-            mov rdx, [V_A]
+        .A: 
+            mov rsi, V_A
+            mov rdx, [rsi]
             call screen_print_hex_q
             jmp .cmdret
         .B:
-            mov rdx, [V_B]
+            mov rsi, V_B
+            mov rdx, [rsi]
             call screen_print_hex_q
             jmp .cmdret
         .C:
-            mov rdx, [V_C]
+            mov rsi, V_C
+            mov rdx, [rsi]
             call screen_print_hex_q
             jmp .cmdret
         .D:
-            mov rdx, [V_D]
+            mov rsi, V_D
+            mov rdx, [rsi]
             call screen_print_hex_q
             jmp .cmdret
     .nl:
@@ -168,6 +206,7 @@ screen_print_string:
         jmp .loop1                  ;loop to start
     .exit:
         pop rdx
+        pop rsi
         pop rdi
         ret
 

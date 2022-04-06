@@ -1,3 +1,4 @@
+;https://wiki.osdev.org/Setting_Up_Long_Mode
 [org 0x1000]
 [bits 16]
     ;kill cursor
@@ -174,12 +175,11 @@ kernel64:
     mov eax, 0x80000008
     cpuid
     mov [V_P_ADDR_BITS], al
-    ;creat pml4 pdpt and pd
+    ;creat pml4 pdpt and pd and pt
     ;plm4e
-    ;;mov rax, 0x70010
+    ;;mov rax, 0x70800
     ;;mov rbx, 0x74003
     ;;mov [rax], rbx        
-    ;;add rbx, 0x1000
     ;pdpte
     mov rax, 0x71010
     mov rbx, 0x75003
@@ -207,8 +207,8 @@ kernel64:
         add rbx, 0x1000
         dec dx
         jnz .loop2
-    jmp qword kernelstart
+    mov rax, kernelstart
+    jmp rax
 
 align 0x1000                               ;align for next kernel part to start at an known address to page map
 next_kernel:
-;https://wiki.osdev.org/Setting_Up_Long_Mode

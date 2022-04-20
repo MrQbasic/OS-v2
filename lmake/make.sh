@@ -7,7 +7,7 @@ nasm bootsec.s -f bin -o bootsec.bin
 cd ../kernel/
 nasm kernel-PM.s -f bin -o kernel-PM.bin
 nasm kernel.s -f bin -o kernel.bin
-ls -lh
+ls -lh *.bin
 cd ..
 
 cat boot/bootsec.bin kernel/kernel-PM.bin kernel/kernel.bin 1,44mb.img > tmp.img

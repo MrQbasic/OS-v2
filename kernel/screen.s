@@ -166,33 +166,61 @@ screen_print_string:
         inc rdi                     ;set pointer to next char
         mov dl, [rdi]               ;get the char
         cmp dl, "A"                 ;-> print rax
-        je .A
+        je .a_q
         cmp dl, "B"                 ;-> print rbx
-        je .B
+        je .b_q
         cmp dl, "C"                 ;-> print rcx
-        je .C
+        je .c_q
         cmp dl, "D"                 ;-> print rdx  
-        je .D
+        je .d_q
+        cmp dl, "a"                 ;-> print  al
+        je .a_b
+        cmp dl, "b"                 ;-> print  bl
+        je .b_b
+        cmp dl, "c"                 ;-> print  cl
+        je .c_b
+        cmp dl, "d"                 ;-> print  dl
+        je .d_b
         jmp .cmdret                 ;if nothing is found then cmdret
-        .A: 
+        .a_q: 
             mov rsi, V_A
             mov rdx, [rsi]
             call screen_print_hex_q
             jmp .cmdret
-        .B:
+        .b_q:
             mov rsi, V_B
             mov rdx, [rsi]
             call screen_print_hex_q
             jmp .cmdret
-        .C:
+        .c_q:
             mov rsi, V_C
             mov rdx, [rsi]
             call screen_print_hex_q
             jmp .cmdret
-        .D:
+        .d_q:
             mov rsi, V_D
             mov rdx, [rsi]
             call screen_print_hex_q
+            jmp .cmdret
+        .a_b: 
+            mov rsi, V_A
+            mov rdx, [rsi]
+            call screen_print_hex_b
+            jmp .cmdret
+        .b_b:
+            mov rsi, V_B
+            mov rdx, [rsi]
+            call screen_print_hex_b
+            jmp .cmdret
+        .c_b:
+            mov rsi, V_C
+            mov rdx, [rsi]
+            call screen_print_hex_b
+            jmp .cmdret
+        .d_b:
+            mov rsi, V_D
+            mov rdx, [rsi]
+            call screen_print_hex_b
             jmp .cmdret
     .nl:
         call screen_nl

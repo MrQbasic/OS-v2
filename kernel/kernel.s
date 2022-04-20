@@ -35,16 +35,21 @@ kernelstart:
     mov [rsi], al
     mov rsi, V_L_ADDR_BITS
     mov [rsi], ah
-    mov edi, T_MSG_PAB
+    mov rdi, T_MSG_PAB
     call screen_print_string
     mov dl, al
     call screen_print_hex_b
-    mov edi, T_MSG_LAB
+    mov rdi, T_MSG_LAB
     call screen_print_string
     mov dl, ah
     call screen_print_hex_b
 
-    ;print done string
+    ;Setup AHCI
+    mov rdi, T_MSG_AHCI
+    call screen_print_string 
+    call ahci_init
+
+    ;Print done msg
     mov rdi, T_MSG_END
     call screen_print_string
     jmp $
@@ -57,6 +62,7 @@ T_MSG_IDT:          db "\nEnable IDT\e"
 T_MSG_EXC:          db "\nSetup exception handler\e"
 T_MSG_PAB:          db "\nPhysical address bits: 0x\e"
 T_MSG_LAB:          db "\nLinear address bits:   0x\e"
+T_MSG_AHCI:         db "\nSetup AHCI\e"
 T_MSG_END:          db "\nDone with boot process \e"
 
 V_P_ADDR_BITS:      db 0
@@ -68,3 +74,8 @@ V_L_ADDR_BITS:      db 0
 %include "./exception.s"
 %include "./pageing.s"
 %include "./math.s"
+%include "./memory.s"
+
+;include drivers
+%include "./driver/pci/pci.s"
+%include "./driver/ata/ahci.s"

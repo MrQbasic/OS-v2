@@ -7,5 +7,6 @@ qemu-system-x86_64 \
     -device ide-hd,drive=disk,bus=ahci.0 \
     -cpu max \
     -D log.txt \
-    -d int
+    -d int \
+    -m 4G
 cd lmake

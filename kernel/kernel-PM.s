@@ -151,6 +151,8 @@ GDT64:
         dq GDT64
 ;---------------------------------------------------------
 kernelstart equ 0x80000000
+V_stackstart  equ 0x0000400000000000
+P_stackstart  equ 0x0000000040001000
 ;---------------------------------------------------------
 %include "./pageing.s"
 %include "./math.s"
@@ -175,29 +177,31 @@ kernel64:
     mov eax, 0x80000008
     cpuid
     mov [V_P_ADDR_BITS], al
-    ;creat pml4 pdpt and pd and pt
+    ;creat pml4, pdpt, pd, pt
     ;plm4e
-    ;;mov rax, 0x70800
-    ;;mov rbx, 0x74003
-    ;;mov [rax], rbx        
+    mov rax, 0x70400
+    mov rbx, 0x77003
+    mov [rax], rbx        
     ;pdpte
     mov rax, 0x71010
     mov rbx, 0x75003
+    mov [rax], rbx
+    ;-
+    mov rax, 0x77000
+    mov rbx, 0x78003
     mov [rax], rbx
     ;pd
     mov rax, 0x75000
     mov rbx, 0x76003
     mov [rax], rbx
-    ;fill pt
-    mov rdi, 0x76000
-    mov rbx, 0x00000003
-    mov rcx, 512
-    .loop1:
-        mov [rdi], rbx
-        add rdi, 8
-        loop .loop1
+    ;-
+    mov rax, 0x78000
+    mov rbx, 0x79003
+    mov [rax], rbx
+    ;-
+
     ;map the kernel
-    mov dx, 512
+    mov dx, 10
     mov cl, 0b00000011
     mov rax, next_kernel
     mov rbx, kernelstart
@@ -207,6 +211,30 @@ kernel64:
         add rbx, 0x1000
         dec dx
         jnz .loop2
+
+
+    ;map the stack
+    mov cl, 0b00000011
+    mov rax, P_stackstart
+    mov rbx, V_stackstart
+    mov dx, 0x10
+    .loop3:
+        call page_map
+        add rax, 0x1000
+        add rbx, 0x1000
+        dec dx
+        jnz .loop3
+
+
+    
+    mov rdx, V_stackstart
+    add rdx, 0xFFFF
+    mov rbp, rdx
+    mov rsp, rbp
+
+
+    
+
     mov rax, kernelstart
     jmp rax
 

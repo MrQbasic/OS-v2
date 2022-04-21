@@ -11,6 +11,11 @@ kernelstart:
     mov rdi, T_MSG_SADDR
     call screen_print_string
 
+    ;print stack start addr
+    mov rax, rbp
+    mov rdi, T_MSG_STACK
+    call screen_print_string
+
     ;remap IRQs
     mov bl, 0x20
     mov bh, 0x28
@@ -44,10 +49,19 @@ kernelstart:
     mov dl, ah
     call screen_print_hex_b
 
+
+    ;setup mappages start addr
+    mov rax, kernelend
+    mov rdi, page_start
+    mov [rdi], rax
+    mov rdi, T_MSG_PAGE
+    call screen_print_string
+
     ;Setup AHCI
     mov rdi, T_MSG_AHCI
     call screen_print_string 
     call ahci_init
+
 
     ;Print done msg
     mov rdi, T_MSG_END
@@ -57,6 +71,7 @@ kernelstart:
 
 T_MSG_KERNEL:       db "---KERNEL-IN-64BIT-MODE---\e"
 T_MSG_SADDR:        db "\nKernel start addr: \rA\e"
+T_MSG_STACK:        db "\nStack  start addr: \rA\e"
 T_MSG_PIC:          db "\nRemaped IRQs\e"
 T_MSG_IDT:          db "\nEnable IDT\e"
 T_MSG_EXC:          db "\nSetup exception handler\e"
@@ -64,18 +79,22 @@ T_MSG_PAB:          db "\nPhysical address bits: 0x\e"
 T_MSG_LAB:          db "\nLinear address bits:   0x\e"
 T_MSG_AHCI:         db "\nSetup AHCI\e"
 T_MSG_END:          db "\nDone with boot process \e"
+T_MSG_PAGE:         db "\nMAP_PAGES start addr: \rA\e"
 
 V_P_ADDR_BITS:      db 0
 V_L_ADDR_BITS:      db 0
+
+;include drivers
+%include "./driver/pci/pci.s"
+%include "./driver/ata/ahci.s"
 
 %include "./screen.s"
 %include "./idt.s"
 %include "./pic.s"
 %include "./exception.s"
-%include "./pageing.s"
 %include "./math.s"
 %include "./memory.s"
+%include "./pageing.s"
 
-;include drivers
-%include "./driver/pci/pci.s"
-%include "./driver/ata/ahci.s"
+align 0x1000    ;get end of kernel page aligned
+kernelend:      db 0x00

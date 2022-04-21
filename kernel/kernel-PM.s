@@ -225,15 +225,10 @@ kernel64:
         dec dx
         jnz .loop3
 
-
-    
     mov rdx, V_stackstart
     add rdx, 0xFFFF
     mov rbp, rdx
     mov rsp, rbp
-
-
-    
 
     mov rax, kernelstart
     jmp rax

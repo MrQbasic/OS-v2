@@ -1,4 +1,7 @@
+
 ;page_map             rax = p-addr / rbx = v-addr / cl = flags
+;page_unmap           rax = v-addr
+;page_find_map                                                  => rax = address of page
 ;-------------------------------------------------------------------------------------------
 [bits 64]
 
@@ -16,6 +19,8 @@ page_map:
     mov [rsi], rbx
     mov rsi, page_buffer_flags
     mov [rsi], cx
+    ;restore if reentry
+    .reentry:
     ;setup filter
     mov rsi, V_P_ADDR_BITS
     mov cl, [rsi]
@@ -27,7 +32,6 @@ page_map:
     mov rdx, cr3
     mov rsi, page_pml4_base
     mov [rsi], rdx
-    .reentry:
     ;get pointer to PML4E
     mov rsi, page_buffer_v_addr
     mov rbx, [rsi]
@@ -98,10 +102,12 @@ page_map:
     mul rbx
     mov rsi, page_pt_base
     add rax, [rsi]
+    ;-
     mov rsi, page_buffer_p_addr
     mov rbx, [rsi]
     mov rsi, page_filter
     and rbx, [rsi]
+    mov rdx, [rsi]
     mov rsi, page_buffer_flags
     or bl, [rsi]
     mov [rax], rbx
@@ -113,24 +119,64 @@ page_map:
     pop rdi
     ret
     .no_pml4e:
-        mov rdi, page_E_pml4
+        mov rsi, rax
+        call page_find_map
+        or rax, page_plm4_default_flags
+        mov [rsi], rax
+        mov rbx, rsi
+        mov rdi, page_T_plm4
         call screen_print_string
-        mov rdx, rax
-        call screen_print_hex_q
-        jmp $
+        jmp .reentry
     .no_pdpt:
-        mov rdi, page_E_pdpt
+        mov rsi, rax
+        call page_find_map
+        or rax, page_pdpt_default_flags
+        mov [rsi], rax
+        mov rbx, rsi
+        mov rdi, page_T_pdpt
         call screen_print_string
-        mov rdx, rax
-        call screen_print_hex_q
-        jmp $
+        jmp .reentry
     .no_pd:
-        mov rdi, page_E_pd
+        mov rsi, rax
+        call page_find_map
+        or rax, page_pd_default_flags
+        mov [rsi], rax
+        mov rbx, rsi
+        mov rdi, page_T_pd
         call screen_print_string
-        mov rdx, rax
-        call screen_print_hex_q
-        mov rsi, page_buffer_v_addr
-        jmp $
+        jmp .reentry
+
+
+page_unmap:
+    ret
+
+page_find_map:
+    push rdx                ;save reg       
+    push rdi
+    mov rdi, page_pages     ;get pointer to pageindex
+    xor rdx, rdx            ;set counter to 0
+    .l1: 
+        mov rax, rdi
+        add rax, rdx        ;get pointer + offset
+        mov al, [rax]       ;get byte from pointer 
+        cmp al, 0x00        ;is byte 0 ?
+        je .return          ;yes then return
+        inc dx              ;inc counter
+        cmp dx, page_numpages   ;check if done
+        jle .l1             ;if not done keep going
+    mov rdi, page_E_space   ;set pointer to error string
+    call screen_print_string;print string
+    jmp $                   ;hang on error
+    .return:                ;return
+    add rdi, rdx            ;get pointer no page index
+    mov byte [rdi], 0x01    ;make as used
+    mov rax, 0x1000         ;factors of mul 1 = 0x1000 / 2 = rdx index of page / res = rax
+    mul rdx
+    mov rdi, page_start     ;get start addr
+    add rax, [rdi]          ;get starting locations of pages
+    pop rdi 
+    pop rdx
+    ret
 
 ;-------------------------------------------------------------------------------------------
 ;vars
@@ -149,7 +195,22 @@ page_buffer_flags:  db 0
 
 page_filter:        dq 0
 
-page_E_pml4:        db "\nERROR->no PML4 entry!\e"
-page_E_pdpt:        db "\nERROR->no PDPT entry!\e"
-page_E_pd:          db "\nERROR->no PD entry!\e"
-page_E_pt:          db "\nERROR->no PT entry!\e"
+page_start:         dq 0    ; start addr of pages
+
+;text
+page_E_space:       db "\nERROR->no space left for mem-map pages! \e"
+page_T_plm4:        db "\nGet sapce for plm4e  ENTRY:\rA  ADDR:\rB\e"
+page_T_pdpt:        db "\nGet sapce for pdpte  ENTRY:\rA  ADDR:\rB\e"
+page_T_pd:          db "\nGet sapce for pde    ENTRY:\rA  ADDR:\rB\e"
+
+page_T_ree:         db "\nreentry\e"
+
+;consts
+page_plm4_default_flags     equ 0b00000011
+page_pdpt_default_flags     equ 0b00000011
+page_pd_default_flags       equ 0b00000011  
+page_numpages       equ 1023
+
+;page index
+page_pages:
+times 1024          db 0x00

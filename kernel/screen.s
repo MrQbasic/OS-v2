@@ -16,6 +16,8 @@
 ;screen_print_bin_w        dx = val
 ;screen_print_bin_d       edx = val
 ;screen_print_bin_q       rdx = val
+;screen_debug_hex
+;screen_debug_bin
 ;-------------------------------------------------------------------------------------------
 screen_space:
     push rdx
@@ -353,7 +355,68 @@ screen_stackdump:
     pop rcx 
     pop rdx
     pop rdi
-    ret 
+    ret
+
+screen_debug_hex:
+    push rdx
+    push rsi
+    push rdi
+    mov rsi, rdx 
+    ;-
+    mov rdi, T_RAX
+    call screen_print_string
+    mov rdx, rax
+    call screen_print_hex_q
+    ;-
+    mov rdi, T_RBX
+    call screen_print_string
+    mov rdx, rbx
+    call screen_print_hex_q
+    ;-
+    mov rdi, T_RCX
+    call screen_print_string
+    mov rdx, rcx
+    call screen_print_hex_q
+    ;-
+    mov rdi, T_RDX
+    call screen_print_string
+    mov rdx, rsi
+    call screen_print_hex_q
+    pop rdi
+    pop rsi
+    pop rdx
+    ret
+
+screen_debug_bin:
+    push rdx
+    push rsi
+    push rdi
+    mov rsi, rdx 
+    ;-
+    mov rdi, T_RAX
+    call screen_print_string
+    mov rdx, rax
+    call screen_print_bin_q
+    ;-
+    mov rdi, T_RBX
+    call screen_print_string
+    mov rdx, rbx
+    call screen_print_bin_q
+    ;-
+    mov rdi, T_RCX
+    call screen_print_string
+    mov rdx, rcx
+    call screen_print_bin_q
+    ;-
+    mov rdi, T_RDX
+    call screen_print_string
+    mov rdx, rsi
+    call screen_print_bin_q
+    ;-
+    pop rdi
+    pop rsi
+    pop rdx
+    ret
 ;-------------------------------------------------------------------------------------------
 ;Const
 DEFAULT_COLOR       equ 0x0A
@@ -375,3 +438,7 @@ V_C:                dq 0
 V_D:                dq 0
 
 T_SIZE:             db "\nSize: \e"
+T_RAX:              db "\nRAX: \e"
+T_RBX:              db "\nRBX: \e"
+T_RCX:              db "\nRCX: \e"
+T_RDX:              db "\nRDX: \e"

@@ -57,6 +57,23 @@ kernelstart:
     mov rdi, T_MSG_PAGE
     call screen_print_string
 
+
+
+
+
+    mov rax, 0x0000500000000000
+    mov rbx, 0x0000500000000000
+    call page_map
+    mov [rbx], rax
+
+
+
+
+
+
+
+    jmp $
+
     ;Setup AHCI
     mov rdi, T_MSG_AHCI
     call screen_print_string 

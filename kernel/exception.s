@@ -154,6 +154,10 @@ exc_isr_14:
     mov rax , cr2
     mov rdi, T_CR2
     call screen_print_string
+    call screen_space
+    pop rdx
+    push rdx
+    call screen_print_hex_q
     add esp, 4
     iretq
 

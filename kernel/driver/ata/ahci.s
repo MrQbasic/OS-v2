@@ -48,7 +48,7 @@ ahci_init:
     mov rax, rdx
     mov rbx, [rsi]
     mov rcx, 0x1100
-    call mem_cp
+    call mem_cp_v
     ;set cfg space to new cfg
     mov dl, 0x24
     mov rsi, [rsi]

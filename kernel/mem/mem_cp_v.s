@@ -1,8 +1,8 @@
-;mem_cp             rax = start addr / rbx = destination addr / rcx = number of bytes
+;mem_cp_v             rax = start addr / rbx = destination addr / rcx = number of bytes
 ;------------------------------------------------------------------------------
 [bits 64]
 
-mem_cp:
+mem_cp_v:
     push rax
     push rbx
     push rcx

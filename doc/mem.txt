@@ -1,0 +1,12 @@
+Physical Address
+
+0000 0000 0000 1000h ---- 0000 0000 4000 0FFFh      KERNEL
+0000 0000 4000 1000h ---- 0000 0000 4001 0FFFh      STACK
+0000 0000 4001 1000h ---- 0000 0000 4001 20FFh      HBA_MEM
+
+Virtual Address
+
+0000 0000 8000 0000h ---- 0000 0000 BFFF FFFFh      KERNEL                       1 GiB
+0000 0000 C000 0000h ---- 0000 0000 C000 10FFh      HBH_MEM                     4352 B
+
+0000 FFFF FFFF 0000h ---- 0000 FFFF FFFF FFFFh      STACK                       64 KiB 

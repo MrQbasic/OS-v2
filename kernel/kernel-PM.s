@@ -154,12 +154,15 @@ kernelstart equ 0x80000000
 V_stackstart  equ 0x0000400000000000
 P_stackstart  equ 0x0000000040001000
 ;---------------------------------------------------------
-%include "./pageing.s"
+%include "./mem/page_find_map.s"
+%include "./mem/page_get_paddr.s"
+%include "./mem/page_map.s"
+%include "./mem/page_vars.s"
 %include "./math.s"
 %include "./screen.s"
-%include "./exception.s"
-%include "./idt.s"
-%include "./pic.s"
+%include "./cpu/exception.s"
+%include "./cpu/idt.s"
+%include "./cpu/pic.s"
 V_P_ADDR_BITS:      db 0
 [bits 64]
 kernel64:

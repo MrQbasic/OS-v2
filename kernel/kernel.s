@@ -57,18 +57,11 @@ kernelstart:
     mov rdi, T_MSG_PAGE
     call screen_print_string
 
-
-
-
-
-    mov rax, 0x0000500000000000
-    mov rbx, 0x0000500000000000
+    mov rax, 0x0000000040031000
+    mov rbx, 0x00000000F0000000
     call page_map
+
     mov [rbx], rax
-
-
-
-
 
 
 
@@ -106,12 +99,15 @@ V_L_ADDR_BITS:      db 0
 %include "./driver/ata/ahci.s"
 
 %include "./screen.s"
-%include "./idt.s"
-%include "./pic.s"
-%include "./exception.s"
+%include "./cpu/idt.s"
+%include "./cpu/pic.s"
+%include "./cpu/exception.s"
 %include "./math.s"
-%include "./memory.s"
-%include "./pageing.s"
+%include "./mem/mem_cp_v.s"
+%include "./mem/page_find_map.s"
+%include "./mem/page_get_paddr.s"
+%include "./mem/page_map.s"
+%include "./mem/page_vars.s"
 
 align 0x1000    ;get end of kernel page aligned
 kernelend:      db 0x00

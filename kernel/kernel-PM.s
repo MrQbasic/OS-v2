@@ -1,13 +1,61 @@
 ;https://wiki.osdev.org/Setting_Up_Long_Mode
+;https://wiki.osdev.org/Detecting_Memory_(x86)#Getting_an_E820_Memory_Map
+
 [org 0x1000]
 [bits 16]
     ;kill cursor
-	mov ah, 0x01
+    mov ah, 0x01
 	mov cx, 0x2607
-	int 0x10
-	jmp PM_enter
-	jmp $
+    int 0x10
+
+memorymap:  
+    mov ax, 0
+    mov es, ax
+    mov di, 0x8004
+    xor ebx, ebx
+    xor bp, bp
+    mov edx, 0x534D4150
+    mov eax, 0x0000e820
+    mov dword [es:di + 20], 1
+    mov ecx, 24
+    int 0x15
+    jc reboot
+    mov edx, 0x534D4150
+    cmp eax, edx
+    jne reboot
+    test ebx, ebx
+    je reboot
+
+.l1:
+    mov eax, 0xe820
+    mov dword [es:di + 20], 1
+    mov ecx, 24
+    int 0x15
+    jc .exit
+    mov edx, 0x534D4150
+.jumpin:
+    jcxz .skipent
+    cmp cl, 20
+    jbe .notext
+    test byte[es:di + 20], 1
+    je .skipent
+.notext:
+    mov ecx, [es:di + 8]
+    or ecx, [es:di + 12]
+    jz .skipent
+    inc bp
+    add di, 24
+.skipent:
+    test ebx, ebx
+    jne .l1
+.exit:
+    mov di, 0x7F00
+    mov [es:di], bp
+
+    jmp PM_enter
+
 	db "THIS IS THE KERNEL MADE BY LEON"
+
 %define PM_STACK 0x90000
 PM_enter:
 	cli

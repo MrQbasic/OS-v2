@@ -16,8 +16,10 @@
 ;screen_print_bin_w        dx = val
 ;screen_print_bin_d       edx = val
 ;screen_print_bin_q       rdx = val
+;screen_print_size        rdx = val
 ;screen_debug_hex
 ;screen_debug_bin
+;screen_memdump           rdi = pointer to mem / rax = number of bytes
 ;-------------------------------------------------------------------------------------------
 screen_space:
     push rdx
@@ -417,6 +419,100 @@ screen_debug_bin:
     pop rsi
     pop rdx
     ret
+
+screen_print_size:
+    push rax
+    push rbx
+    push rdx
+    push rdi
+    mov rbx, 1024
+    mov rax, rdx
+    xor rdx, rdx
+    cmp rax, rbx
+    jl .print_B
+    div rbx
+    cmp rax, rbx
+    jl .print_KB
+    div rbx
+    cmp rax, rbx
+    jl .print_MB
+    div rbx
+    cmp rax, rbx
+    jl .print_GB
+    div rbx
+    cmp rax, rbx
+    jl .print_TB
+    div rbx
+    jmp .print_PB
+
+    .print_B:
+        mov dx, ax
+        call screen_print_hex_w
+        mov rdi, T_BYTE
+        call screen_print_string
+        jmp .exit
+    .print_KB:
+        mov dx, ax
+        call screen_print_hex_w
+        mov rdi, T_KILOBYTE
+        call screen_print_string
+        jmp .exit
+    .print_MB:
+        mov dx, ax
+        call screen_print_hex_w
+        mov rdi, T_MEGABYTE
+        call screen_print_string
+        jmp .exit
+    .print_GB:
+        mov dx, ax
+        call screen_print_hex_w
+        mov rdi, T_GIGABYTE
+        call screen_print_string
+        jmp .exit
+    .print_TB:
+        mov dx, ax
+        call screen_print_hex_w
+        mov rdi, T_TERABYTE
+        call screen_print_string
+        jmp .exit
+    .print_PB:
+        mov dx, ax
+        call screen_print_hex_w
+        mov rdi, T_PETABYTE
+        call screen_print_string
+    .exit:
+        pop rdi
+        pop rdx
+        pop rbx
+        pop rax
+        ret
+
+screen_memdump:
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    call screen_nl
+    xor rcx, rcx        ;counter2 = 0
+    .l1:
+        cmp rax, 0x00   ;if counter1 = 0
+        je .exit        ;exit
+        dec rax         ;counter1 -1
+        inc rcx         ;counter2 +1
+        mov rbx, rdi    ;get pointer to base addr
+        add rbx, rcx    ;add counter2 to pointer (as offset)
+        mov dl, [rbx]   ;get byte from pointer
+        call screen_print_hex_b   ;print byte
+        call screen_space
+        jmp .l1         ;loop
+
+    .exit:
+        pop rdx
+        pop rcx
+        pop rbx
+        pop rax
+        ret
+
 ;-------------------------------------------------------------------------------------------
 ;Const
 DEFAULT_COLOR       equ 0x0A
@@ -428,7 +524,7 @@ V_SCREEN_SIZE:      dq 0x0075F ;size in words
 V_CURSOR:           dw 0x0000  ;is in bytes not in chars!
 V_CURSOR_MAX:       dw 0x0EBE  ;is in bytes not in chars!
 
-V_LINE_SIZE:        dw 160     ;num of chars in 1 line (1 char = 2bytes)
+V_LINE_SIZE:        dw 160     ;num of bytes in 1 line (1 char = 2bytes)
 
 HEX:                db "0123456789ABCDEF_"
 
@@ -442,3 +538,10 @@ T_RAX:              db "\nRAX: \e"
 T_RBX:              db "\nRBX: \e"
 T_RCX:              db "\nRCX: \e"
 T_RDX:              db "\nRDX: \e"
+
+T_BYTE:             db "h B\e"
+T_KILOBYTE:         db "h KB\e"
+T_MEGABYTE:         db "h MB\e"
+T_GIGABYTE:         db "h GB\e"
+T_TERABYTE:         db "h TB\e"
+T_PETABYTE:         db "h PB\e"

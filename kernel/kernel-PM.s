@@ -11,47 +11,27 @@
 memorymap:  
     mov ax, 0
     mov es, ax
-    mov di, 0x8004
-    xor ebx, ebx
-    xor bp, bp
     mov edx, 0x534D4150
-    mov eax, 0x0000e820
-    mov dword [es:di + 20], 1
+    mov eax, 0xE820
     mov ecx, 24
+    mov dword[0x7F00], 0
+    mov edi, 0x8008
+    xor ebx, ebx
     int 0x15
     jc reboot
-    mov edx, 0x534D4150
-    cmp eax, edx
-    jne reboot
-    test ebx, ebx
-    je reboot
-
 .l1:
-    mov eax, 0xe820
-    mov dword [es:di + 20], 1
+    add edi, 24
+    inc dword [0x7F00]
+    test ebx, ebx 
+    jz .exit
+    mov eax, 0xE820
+    mov edx, 0x534d4150
     mov ecx, 24
     int 0x15
-    jc .exit
-    mov edx, 0x534D4150
-.jumpin:
-    jcxz .skipent
-    cmp cl, 20
-    jbe .notext
-    test byte[es:di + 20], 1
-    je .skipent
-.notext:
-    mov ecx, [es:di + 8]
-    or ecx, [es:di + 12]
-    jz .skipent
-    inc bp
-    add di, 24
-.skipent:
-    test ebx, ebx
-    jne .l1
-.exit:
-    mov di, 0x7F00
-    mov [es:di], bp
+    jnc .l1
 
+
+.exit:
     jmp PM_enter
 
 	db "THIS IS THE KERNEL MADE BY LEON"

@@ -49,6 +49,38 @@ kernelstart:
     mov dl, ah
     call screen_print_hex_b
 
+    ;get memory map
+    mov rsi, 0x7F00         ;get pointer to number of map entries
+    xor rax, rax            ;set rax to 0
+    mov ax, [rsi]           ;get number of pages from pointer
+    mov rsi, rax            ;copy it to counter
+    dec rsi
+    xor rcx, rcx
+    .l1:
+        inc rcx                  ;dec counter
+        mov rdi, BOOT_MEMMAP     ;get pointer to start of map
+        mov rax, 24              ;get factor 1(24) for mul
+        mov rbx, rcx             ;get factor 2(counter)
+        mul rbx                  ;calc map offset to get to entry of index counter
+        add rdi, rax             ;add ofset to base addr
+        
+        mov rax, 24
+        call screen_memdump
+
+
+
+        .skipp1:
+        cmp rcx, rsi
+        jne .l1
+
+
+
+    .skipp2:
+    mov rdi, T_MSG_MEM
+    call screen_print_string
+    call screen_print_size
+
+    jmp $
 
     ;setup mappages start addr
     mov rax, kernelend
@@ -90,9 +122,14 @@ T_MSG_LAB:          db "\nLinear address bits:   0x\e"
 T_MSG_AHCI:         db "\nSetup AHCI\e"
 T_MSG_END:          db "\nDone with boot process \e"
 T_MSG_PAGE:         db "\nMAP_PAGES start addr: \rA\e"
+T_MSG_MEM:          db "\nMemory available: \e"
 
 V_P_ADDR_BITS:      db 0
 V_L_ADDR_BITS:      db 0
+
+V_MEM:              dq 0x0
+
+BOOT_MEMMAP         equ 0x8000
 
 ;include drivers
 %include "./driver/pci/pci.s"

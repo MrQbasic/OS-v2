@@ -16,6 +16,9 @@
 ;screen_print_bin_w        dx = val
 ;screen_print_bin_d       edx = val
 ;screen_print_bin_q       rdx = val
+;screen_print_dec_n        dl = val (low)
+;scrren_print_dec         rdx = val / al = number of n(4 bit)
+;screen_print_dec_b        dl = val
 ;screen_print_size        rdx = val
 ;screen_debug_hex
 ;screen_debug_bin
@@ -427,21 +430,25 @@ screen_print_size:
     push rdi
     mov rbx, 1024
     mov rax, rdx
-    xor rdx, rdx
     cmp rax, rbx
     jl .print_B
+    xor rdx, rdx
     div rbx
     cmp rax, rbx
     jl .print_KB
+    xor rdx, rdx
     div rbx
     cmp rax, rbx
     jl .print_MB
+    xor rdx, rdx
     div rbx
     cmp rax, rbx
     jl .print_GB
+    xor rdx, rdx
     div rbx
     cmp rax, rbx
     jl .print_TB
+    xor rdx, rdx
     div rbx
     jmp .print_PB
 
@@ -505,13 +512,25 @@ screen_memdump:
         call screen_print_hex_b   ;print byte
         call screen_space
         jmp .l1         ;loop
-
     .exit:
         pop rdx
         pop rcx
         pop rbx
         pop rax
         ret
+
+screen_print_dec:
+    push rax
+    push rdx
+    .l1:
+        
+
+        dec al
+        jnz .l1 
+
+    pop rdx
+    pop rax
+    ret
 
 ;-------------------------------------------------------------------------------------------
 ;Const
@@ -540,8 +559,8 @@ T_RCX:              db "\nRCX: \e"
 T_RDX:              db "\nRDX: \e"
 
 T_BYTE:             db "h B\e"
-T_KILOBYTE:         db "h KB\e"
-T_MEGABYTE:         db "h MB\e"
-T_GIGABYTE:         db "h GB\e"
-T_TERABYTE:         db "h TB\e"
-T_PETABYTE:         db "h PB\e"
+T_KILOBYTE:         db "h KiB\e"
+T_MEGABYTE:         db "h MiB\e"
+T_GIGABYTE:         db "h GiB\e"
+T_TERABYTE:         db "h TiB\e"
+T_PETABYTE:         db "h PiB\e"

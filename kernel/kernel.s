@@ -53,34 +53,35 @@ kernelstart:
     mov rsi, 0x7F00         ;get pointer to number of map entries
     xor rax, rax            ;set rax to 0
     mov ax, [rsi]           ;get number of pages from pointer
-    mov rsi, rax            ;copy it to counter
-    dec rsi
-    xor rcx, rcx
+    mov rsi, rax            ;copy it to counter max
+    xor rcx, rcx            ;reset counter
     .l1:
-        inc rcx                  ;dec counter
         mov rdi, BOOT_MEMMAP     ;get pointer to start of map
-        mov rax, 24              ;get factor 1(24) for mul
+        mov rax, 20              ;get factor 1(24) for mul
         mov rbx, rcx             ;get factor 2(counter)
         mul rbx                  ;calc map offset to get to entry of index counter
         add rdi, rax             ;add ofset to base addr
-        
-        mov rax, 24
-        call screen_memdump
-
-
-
+        mov dl, [rdi + 16]       ;get type of entry
+        cmp dl, 0x01             ;check if it is free memory
+        jne .skipp1              ;if not skipp to end of loop code
+        mov rdx, [rdi + 8]       ;get size of entry
+        mov rdi, V_MEM           ;get pointer to memsize var
+        add [rdi], rdx           ;add size to var
         .skipp1:
-        cmp rcx, rsi
-        jne .l1
+            inc rcx              ;dec counter
+            cmp rcx, rsi         ;check if done
+            jne .l1              ;if not loop
+    mov rdi, T_MSG_MEM           ;get pointer to msg
+    call screen_print_string     ;print msg
+    mov rsi, V_MEM               ;get pointer to memsizevar 
+    mov rdx, [rsi]               ;get val from var
+    call screen_print_hex_q      ;print it
 
 
-
-    .skipp2:
-    mov rdi, T_MSG_MEM
-    call screen_print_string
-    call screen_print_size
 
     jmp $
+
+
 
     ;setup mappages start addr
     mov rax, kernelend
@@ -94,8 +95,6 @@ kernelstart:
     call page_map
 
     mov [rbx], rax
-
-
 
     jmp $
 

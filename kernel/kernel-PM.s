@@ -12,24 +12,23 @@ memorymap:
     mov ax, 0
     mov es, ax
     mov edx, 0x534D4150
-    mov eax, 0xE820
-    mov ecx, 24
+    mov eax, 0x0000E820
+    mov ecx, 20
     mov dword[0x7F00], 0
-    mov edi, 0x8008
+    mov edi, 0x8000
     xor ebx, ebx
     int 0x15
     jc reboot
 .l1:
-    add edi, 24
+    add edi, 20
     inc dword [0x7F00]
     test ebx, ebx 
     jz .exit
     mov eax, 0xE820
     mov edx, 0x534d4150
-    mov ecx, 24
+    mov ecx, 20
     int 0x15
     jnc .l1
-
 
 .exit:
     jmp PM_enter

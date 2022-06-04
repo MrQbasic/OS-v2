@@ -146,8 +146,8 @@ screen_print_char:
 
 screen_print_string:
     push rdi
-    push rsi
     push rdx
+    push rsi
     mov rsi, V_A
     mov [rsi], rax
     mov rsi, V_B
@@ -156,6 +156,10 @@ screen_print_string:
     mov [rsi], rcx
     mov rsi, V_D
     mov [rsi], rdx
+    mov rax, V_SI
+    pop rdx
+    push rdx
+    mov [rax], rdx
     .loop1:
         mov dl, [rdi]               ;get the char
         cmp dl, "\"                 ;is char a cmd prefix
@@ -180,6 +184,8 @@ screen_print_string:
         je .c_q
         cmp dl, "D"                 ;-> print rdx  
         je .d_q
+        cmp dl, "S"                 ;-> print rsi
+        je .s_q 
         cmp dl, "a"                 ;-> print  al
         je .a_b
         cmp dl, "b"                 ;-> print  bl
@@ -206,6 +212,11 @@ screen_print_string:
             jmp .cmdret
         .d_q:
             mov rsi, V_D
+            mov rdx, [rsi]
+            call screen_print_hex_q
+            jmp .cmdret
+        .s_q:
+            mov rsi, V_SI
             mov rdx, [rsi]
             call screen_print_hex_q
             jmp .cmdret
@@ -240,8 +251,8 @@ screen_print_string:
         inc rdi                     ;set pointer to next byte
         jmp .loop1                  ;loop to start
     .exit:
-        pop rdx
         pop rsi
+        pop rdx
         pop rdi
         ret
 
@@ -387,6 +398,21 @@ screen_debug_hex:
     call screen_print_string
     mov rdx, rsi
     call screen_print_hex_q
+    ;-
+    mov rdi, T_RDI
+    call screen_print_string
+    pop rdx
+    push rdx
+    call screen_print_hex_q
+    ;-
+    mov rdi, T_RSI
+    call screen_print_string
+    pop rdi
+    pop rdx
+    push rdx
+    push rdi
+    call screen_print_hex_q
+    ;-
     pop rdi
     pop rsi
     pop rdx
@@ -416,6 +442,20 @@ screen_debug_bin:
     mov rdi, T_RDX
     call screen_print_string
     mov rdx, rsi
+    call screen_print_bin_q
+    ;-
+    mov rdi, T_RDI
+    call screen_print_string
+    pop rdx
+    push rdx
+    call screen_print_bin_q
+    ;-
+    mov rdi, T_RSI
+    call screen_print_string
+    pop rdi
+    pop rdx
+    push rdx
+    push rdi
     call screen_print_bin_q
     ;-
     pop rdi
@@ -551,12 +591,15 @@ V_A:                dq 0
 V_B:                dq 0
 V_C:                dq 0
 V_D:                dq 0
+V_SI:               dq 0
 
 T_SIZE:             db "\nSize: \e"
 T_RAX:              db "\nRAX: \e"
 T_RBX:              db "\nRBX: \e"
 T_RCX:              db "\nRCX: \e"
 T_RDX:              db "\nRDX: \e"
+T_RDI:              db "\nRDI: \e"
+T_RSI:              db "\nRSI: \e"
 
 T_BYTE:             db "h B\e"
 T_KILOBYTE:         db "h KiB\e"

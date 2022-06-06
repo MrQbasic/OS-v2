@@ -251,6 +251,8 @@ screen_print_string:
         inc rdi                     ;set pointer to next byte
         jmp .loop1                  ;loop to start
     .exit:
+        mov rdi, V_A
+        mov rax, [rdi]
         pop rsi
         pop rdx
         pop rdi

@@ -496,36 +496,48 @@ screen_print_size:
 
     .print_B:
         mov dx, ax
+        mov rdi, T_PREFIX_HEX
+        call screen_print_string
         call screen_print_hex_w
         mov rdi, T_BYTE
         call screen_print_string
         jmp .exit
     .print_KB:
         mov dx, ax
+        mov rdi, T_PREFIX_HEX
+        call screen_print_string
         call screen_print_hex_w
         mov rdi, T_KILOBYTE
         call screen_print_string
         jmp .exit
     .print_MB:
         mov dx, ax
+        mov rdi, T_PREFIX_HEX
+        call screen_print_string
         call screen_print_hex_w
         mov rdi, T_MEGABYTE
         call screen_print_string
         jmp .exit
     .print_GB:
         mov dx, ax
+        mov rdi, T_PREFIX_HEX
+        call screen_print_string
         call screen_print_hex_w
         mov rdi, T_GIGABYTE
         call screen_print_string
         jmp .exit
     .print_TB:
         mov dx, ax
+        mov rdi, T_PREFIX_HEX
+        call screen_print_string
         call screen_print_hex_w
         mov rdi, T_TERABYTE
         call screen_print_string
         jmp .exit
     .print_PB:
         mov dx, ax
+        mov rdi, T_PREFIX_HEX
+        call screen_print_string
         call screen_print_hex_w
         mov rdi, T_PETABYTE
         call screen_print_string
@@ -603,9 +615,11 @@ T_RDX:              db "\nRDX: \e"
 T_RDI:              db "\nRDI: \e"
 T_RSI:              db "\nRSI: \e"
 
-T_BYTE:             db "h B\e"
-T_KILOBYTE:         db "h KiB\e"
-T_MEGABYTE:         db "h MiB\e"
-T_GIGABYTE:         db "h GiB\e"
-T_TERABYTE:         db "h TiB\e"
-T_PETABYTE:         db "h PiB\e"
+T_BYTE:             db " B\e"
+T_KILOBYTE:         db " KiB\e"
+T_MEGABYTE:         db " MiB\e"
+T_GIGABYTE:         db " GiB\e"
+T_TERABYTE:         db " TiB\e"
+T_PETABYTE:         db " PiB\e"
+
+T_PREFIX_HEX:       db "0x\e"

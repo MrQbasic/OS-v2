@@ -229,9 +229,15 @@ kernel64:
     mov rbx, 0x79003
     mov [rax], rbx
     ;-
+    mov rax, 0x75008
+    mov rbx, 0x79003
+    mov [rax], rbx
+    ;-
+
+    ;-
 
     ;map the kernel
-    mov dx, 10
+    mov dx, 256
     mov cl, 0b00000011
     mov rax, next_kernel
     mov rbx, kernelstart
@@ -244,10 +250,10 @@ kernel64:
 
 
     ;map the stack
+    mov dx, 0x10
     mov cl, 0b00000011
     mov rax, P_stackstart
     mov rbx, V_stackstart
-    mov dx, 0x10
     .loop3:
         call page_map
         add rax, 0x1000

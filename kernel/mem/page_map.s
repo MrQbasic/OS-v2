@@ -124,6 +124,7 @@ page_map:
         mov rbx, rsi
         mov rdi, page_T_plm4
         call screen_print_string
+        jmp $
         jmp .reentry
     .no_pdpt:
         mov rsi, rax
@@ -134,6 +135,7 @@ page_map:
         mov rbx, rsi
         mov rdi, page_T_pdpt
         call screen_print_string
+        jmp $
         jmp .reentry
     .no_pd:
         mov rsi, rax
@@ -144,4 +146,5 @@ page_map:
         mov rbx, rsi
         mov rdi, page_T_pd
         call screen_print_string
+        jmp $
         jmp .reentry

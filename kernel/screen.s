@@ -622,9 +622,9 @@ T_GIGABYTE:         db " GiB\e"
 T_TERABYTE:         db " TiB\e"
 T_PETABYTE:         db " PiB\e"
 
-T_QWORD:            db "QWORD (64)\e"
-T_DWORD:            db "DOWRD (32)\e"
-T_WORD:             db "WORD  (16)\e"
-T_BYTE:             db "BYTE  (08)\e"
+T_R_QWORD:            db "QWORD (64)\e"
+T_R_DWORD:            db "DOWRD (32)\e"
+T_R_WORD:             db "WORD  (16)\e"
+T_R_BYTE:             db "BYTE  (08)\e"
 
 T_PREFIX_HEX:       db "0x\e"

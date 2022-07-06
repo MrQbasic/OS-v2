@@ -11,6 +11,11 @@ kernelstart:
     mov rdi, T_MSG_SADDR
     call screen_print_string
 
+    ;print kernal end addr
+    mov rax, kernelend
+    mov rdi, T_MSG_EADDR
+    call screen_print_string
+
     ;print stack start addr
     mov rax, rbp
     mov rdi, T_MSG_STACK
@@ -104,10 +109,10 @@ kernelstart:
     mov rdi, kernelend
     call mem_init
 
+    call mem_palloc
+
 
     jmp $
-
-
 
     ;setup mappages start addr
     mov rax, kernelend
@@ -133,6 +138,7 @@ kernelstart:
 
 T_MSG_KERNEL:       db "---KERNEL-IN-64BIT-MODE---\e"
 T_MSG_SADDR:        db "\nKernel start addr: \rA\e"
+T_MSG_EADDR:        db "\nKernel end   addr: \rA\e"
 T_MSG_STACK:        db "\nStack  start addr: \rA\e"
 T_MSG_PIC:          db "\nRemaped IRQs\e"
 T_MSG_IDT:          db "\nEnable IDT\e"

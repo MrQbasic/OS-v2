@@ -1,7 +1,8 @@
 ;mem_init       rdi = pointer to end of kernel code
 ;mem_alloc      rax = size                              => rdi = start addr
-;mem_free       rax = start addr
+;mem_free       rdi = vaddr
 ;mem_palloc                                             => rdi = paddr
+;mem_palloc_
 ;mem_pfree      rdi = paddr
 ;-------------------------------------------------------------------------------------------
 [bits 64]

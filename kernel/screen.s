@@ -20,6 +20,8 @@
 ;scrren_print_dec         rdx = val / al = number of n(4 bit)
 ;screen_print_dec_b        dl = val
 ;screen_print_size        rdx = val
+;screen_print_yes
+;screen_print_no
 ;screen_debug_hex
 ;screen_debug_bin
 ;screen_memdump           rdi = pointer to mem / rax = number of bytes
@@ -351,6 +353,20 @@ screen_print_bin_q:
     call screen_print_bin_d
     ret
 
+screen_print_yes:
+    push rdi
+    mov rdi, T_YES
+    call screen_print_string
+    pop rdi
+    ret
+
+screen_print_no:
+    push rdi
+    mov rdi, T_NO
+    call screen_print_string
+    pop rdi
+    ret
+
 screen_stackdump:
     push rdi 
     push rdx
@@ -622,9 +638,12 @@ T_GIGABYTE:         db " GiB\e"
 T_TERABYTE:         db " TiB\e"
 T_PETABYTE:         db " PiB\e"
 
-T_R_QWORD:            db "QWORD (64)\e"
-T_R_DWORD:            db "DOWRD (32)\e"
-T_R_WORD:             db "WORD  (16)\e"
-T_R_BYTE:             db "BYTE  (08)\e"
+T_R_QWORD:          db "QWORD (64)\e"
+T_R_DWORD:          db "DOWRD (32)\e"
+T_R_WORD:           db "WORD  (16)\e"
+T_R_BYTE:           db "BYTE  (08)\e"
 
 T_PREFIX_HEX:       db "0x\e"
+
+T_YES:              db "YES\e"  
+T_NO:               db "NO\e"

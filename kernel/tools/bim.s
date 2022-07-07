@@ -2,8 +2,8 @@
 ;-------------------------------------------------------------------------------------------
 ;bim_get    rdi = pointer to bit map / rax = index of bit                                 =>   rdx = val
 ;bim_set    rdi = pointer to bit map / rax = index of bit / rdx = val
-;bim_find_0 rdi = pointer to bit map / rbx = number of bits / rax = max bits              =>   rdi = index
-;bim_find_1 rdi = pointer to bit map / rax = number of bits / rbx = max bits              =>   rax = index
+;bim_find_0 rdi = pointer to bit map / rax = number of bits / rbx = max bits              =>   rdi = index
+;bim_find_1 rdi = pointer to bit map / rax = number of bits / rbx = max bits              =>   rax = index / CF = 1:not found 0:found
 ;-------------------------------------------------------------------------------------------
 [bits 64]
 
@@ -192,6 +192,7 @@ bim_find_0:
     pop rcx
     pop rbx
     pop rax
+    clc
     ret
 
 
@@ -320,6 +321,7 @@ bim_find_1:
     pop rcx
     pop rbx
     pop rax
+    clc
     ret
 
     error0:
@@ -327,10 +329,14 @@ bim_find_1:
         call screen_print_string
         jmp $
     error1:
-        mov rdi, bim_error_search_1
-        call screen_print_string
-        jmp $
+        pop rsi
+        pop rdx
+        pop rcx
+        pop rbx
+        pop rax
+        stc
+        ret
+        
 
 ;-------------------------------------------------------------------------------------------
 bim_error_search_0:         db "\nERROR-> can not find 0 bits in bitmap! Input other number!\e"
-bim_error_search_1:         db "\nERROR-> not enough continuous bits available!\e"

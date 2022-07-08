@@ -334,6 +334,7 @@ bim_find_1:
         pop rcx
         pop rbx
         pop rax
+        mov rdi, 0
         stc
         ret
         

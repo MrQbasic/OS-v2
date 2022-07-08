@@ -109,6 +109,12 @@ kernelstart:
     mov rdi, kernelend
     call mem_init
 
+    mov rax, 4
+    call mem_palloc
+    
+    jmp $
+
+    mov rax, 5
     call mem_palloc
 
 

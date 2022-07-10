@@ -38,6 +38,11 @@ kernelstart:
     mov rdi, T_MSG_EXC
     call screen_print_string
 
+    ;setup systemcounter
+    call syscounter_init
+    mov rdi, T_MSG_SYSCNT
+    call screen_print_string
+
     ;get the amount of physical address bits
     mov eax, 0x80000008
     cpuid
@@ -109,6 +114,8 @@ kernelstart:
     mov rdi, kernelend
     call mem_init
 
+
+
     jmp $
 
     ;setup mappages start addr
@@ -146,6 +153,7 @@ T_MSG_AHCI:         db "\nSetup AHCI\e"
 T_MSG_END:          db "\nDone with boot process \e"
 T_MSG_PAGE:         db "\nMAP_PAGES start addr: \rA\e"
 T_MSG_MEM:          db "\nMemory available: \e"
+T_MSG_SYSCNT:       db "\nSetup system counter\e"
 
 V_P_ADDR_BITS:      db 0
 V_L_ADDR_BITS:      db 0
@@ -162,14 +170,16 @@ BOOT_MEMMAP_CNT     equ 0x0000000000007F00
 %include "./tools/ldl.s"
 %include "./tools/bim.s"
 
+%include "./math.s"
+
 ;include drivers
 %include "./screen.s"
+
+%include "./driver/syscounter.s"
 
 %include "./cpu/idt.s"
 %include "./cpu/pic.s"
 %include "./cpu/exception.s"
-
-%include "./math.s"
 
 %include "./mem/mem_cp_v.s"
 %include "./mem/page_find_map.s"

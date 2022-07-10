@@ -116,35 +116,24 @@ page_map:
     pop rdi
     ret
     .no_pml4e:
-        mov rsi, rax
-        call page_find_map
-        call page_get_paddr
-        or rax, page_plm4_default_flags
-        mov [rsi], rax
-        mov rbx, rsi
-        mov rdi, page_T_plm4
-        call screen_print_string
         jmp $
-        jmp .reentry
     .no_pdpt:
-        mov rsi, rax
-        call page_find_map
-        call page_get_paddr
-        or rax, page_pdpt_default_flags
-        mov [rsi], rax
-        mov rbx, rsi
-        mov rdi, page_T_pdpt
-        call screen_print_string
         jmp $
-        jmp .reentry
     .no_pd:
-        mov rsi, rax
-        call page_find_map
-        call page_get_paddr
-        or rax, page_pd_default_flags
-        mov [rsi], rax
-        mov rbx, rsi
-        mov rdi, page_T_pd
-        call screen_print_string
         jmp $
-        jmp .reentry
+
+
+page_pml4e:         dq 0
+page_pdpte:         dq 0
+page_pde:           dq 0
+
+page_pml4_base:     dq 0
+page_pdpt_base:     dq 0
+page_pd_base:       dq 0
+page_pt_base:       dq 0
+
+page_buffer_p_addr: dq 0
+page_buffer_v_addr: dq 0
+page_buffer_flags:  db 0
+
+page_filter:        dq 0

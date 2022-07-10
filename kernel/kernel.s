@@ -116,24 +116,6 @@ kernelstart:
 
 
 
-    jmp $
-
-    ;setup mappages start addr
-    mov rax, kernelend
-    mov rdi, page_start
-    mov [rdi], rax
-    mov rdi, T_MSG_PAGE
-    call screen_print_string
-
-    mov rax, 0x0000000040031000
-    mov rbx, 0x00000000F0000000
-    call page_map
-
-    mov [rbx], rax
-
-    jmp $
-
-
     ;Print done msg
     mov rdi, T_MSG_END
     call screen_print_string
@@ -181,11 +163,7 @@ BOOT_MEMMAP_CNT     equ 0x0000000000007F00
 %include "./cpu/pic.s"
 %include "./cpu/exception.s"
 
-%include "./mem/mem_cp_v.s"
-%include "./mem/page_find_map.s"
-%include "./mem/page_get_paddr.s"
 %include "./mem/page_map.s"
-%include "./mem/page_vars.s"
 
 %include "./memory/memory.s"
 

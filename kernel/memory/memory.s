@@ -1,8 +1,8 @@
-;mem_init       rdi = pointer to memory system tables start
-;mem_alloc      rarx = size                              => rdi = start addr
+;mem_init       rdi = pointer to memory system tables start addr 
+;mem_alloc      rax = size                               => rdi = start addr
 ;mem_free       rdi = vaddr
 ;mem_palloc     rax = number of pages                    => rdi = paddr
-;mem_pfree      rdi = paddr
+;mem_pfree      rdi = paddr / rax = number of pages
 ;-------------------------------------------------------------------------------------------
 [bits 64]
 
@@ -29,7 +29,7 @@ mem_init:
         mov edx, [rsi + 8 + 8]
         cmp edx, 1
         jne .skipp2
-        ;check if size is bigger then 1 page
+        ;calc number of pages
         xor rdx, rdx
         mov rax, [rsi + 8]
         mov rbx, 4096
@@ -39,8 +39,15 @@ mem_init:
         ;get and save start addr
         mov rax, [rsi]
         mov [rdi], rax
+        ;calc and save end addr
+        xor rdx, rdx
+        mov rax, [rdi + 8]
+        mov rbx, 4096
+        mul rbx
+        add rax, [rdi]
+        mov [rdi + 8 + 8 + 8], rax
         ;set pointer to next entry of memmap
-        add rdi, 8*3
+        add rdi, 8*4
         mov rdx, mem_memmap_cnt
         inc qword [rdx]
         .skipp2:
@@ -76,7 +83,7 @@ mem_init:
         inc rax
         add rdi, rax
         ;set pointer to next entry
-        add rsi, 8*3
+        add rsi, 8*4
         ;loop l2
         jmp .l2
     .skipp3:
@@ -139,7 +146,6 @@ mem_palloc:
         add rsi, 8*3
         inc rcx
         jmp .l1
-
     .exit:
     pop rsi
     pop rdx
@@ -156,11 +162,88 @@ mem_palloc:
         call screen_print_string
         jmp $
 
+
+mem_pfree:
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rdi
+    push rsi
+    ;check input address and ajust if needed
+    push rax
+    mov rax, rdi
+    xor rdx, rdx
+    mov rbx, 4096
+    div rbx
+    test rdx, rdx
+    jz .skipp1
+    call .warn_notvalid
+    and rdi, 0xFFFFFFFFFFFFF000
+    .skipp1:
+    ;get bitmap and starting index of first bit form memmap
+    mov rsi, mem_memmap_start
+    mov rsi, [rsi]
+    mov rcx, mem_memmap_cnt
+    mov rcx, [rcx]
+    .l1:
+        ;check counter
+        cmp rcx, 0
+        je .error_notfound
+        ;check address range of memmap entry
+        mov rdx, [rsi + 8*3]
+        cmp rdx, rdi
+        jl .next
+        mov rdx, [rsi + 8*0]
+        cmp rdx, rdi
+        jg .next
+        ;calc index of bit
+        sub rdi, [rsi + 8*0]
+        mov rax, rdi
+        xor rdx, rdx
+        mov rbx, 4096
+        div rbx
+        ;free pages
+        pop rbx
+        mov rdi, [rsi + 8*2]
+        call bim_fill_0
+        jmp .exit
+        .next:
+        ;loop l1
+        add rsi, 8*4
+        dec rcx
+        jmp .l1
+
+    .exit: 
+    pop rsi
+    pop rdi
+    pop rdx
+    pop rcx 
+    pop rbx
+    pop rax
+    ret
+    .error_notfound:
+        pop rax
+        mov rax, rdi
+        mov rdi, mem_error_pfree_notfound
+        call screen_print_string
+        jmp $
+    .warn_notvalid:
+        push rax
+        push rdi 
+        mov rax, rdi
+        mov rdi, mem_warn_pfree_notvalid
+        call screen_print_string
+        pop rdi
+        pop rax
+        ret
+
 ;-------------------------------------------------------------------------------------------
 ;MEM MAP BETTER REPRESENTATION
-;  0 paddr
+;  0 paddr - start
 ;  8 number of pages
 ; 16 start of BIT-MAP
+; 24 paddr - end
 ;--
 ;MEM List structure
 ;  0 pointer ti next entry (0 if last)
@@ -176,5 +259,6 @@ mem_error_init_error0:     db "\nERROR-> IT APPEARS THAT THE MEMORY MAP HAS NO U
 mem_error_palloc_error0:   db "\nERROR-> CAN NOT ALLOCATE 0 PAGES!\e"
 mem_error_palloc_nospace:  db "\nERROR-> OUT OF MEMORY!\e"
 mem_error_pfree_notfound:  db "\nERROR-> THERE IS NO PAGE WITH ADDR: 0x\rA!\e"
+mem_warn_pfree_notvalid:  db "\nWARNING-> \rA IS NOT A VALID PAGE ADDRESS! PLEASE CHECK CODE!\e"
 
 mem_t_palloc:              db "\nSize of page frame allocator: \e"

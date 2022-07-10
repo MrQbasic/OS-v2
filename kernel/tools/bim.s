@@ -358,16 +358,32 @@ bim_fill_0:
     mov rcx, 8
     div rcx
     add rdi, rax
+    cmp rbx, 8
+    jl .skipp2    
     ;create bitmask and sub number of bit in first byte from target
     mov rcx, 8
     sub cl, dl
     sub rbx, rcx
     mov dl, 0xFF
-    shr dl, cl
+    shl dl, cl
     ;write byte
-    and [rdi], dl
-    ;set pointer to next byte
+    or [rdi], dl
     add rdi, 1
+    jmp .l1
+    ;create bitmask and set target to 0
+    .skipp2:
+    mov rax, rdx
+    mov rcx, 8
+    sub cl, bl
+    mov dl, 0xFF
+    shl dl, cl
+    shr dl, cl
+    mov cl, al
+    shl dl, cl
+    ;write byte
+    xor dl, 0xFF
+    and [rdi], dl
+    xor rbx, rbx
     .l1:
         ;check counter
         cmp rbx, 0
@@ -382,9 +398,10 @@ bim_fill_0:
         cmp rbx, 8
         jge .LOAD_BYTE
         ;generate bitmask for last byte
+        xor rdx, rdx
         mov cl, bl
         mov dl, 0xFF
-        shr dl, cl
+        shl dl, cl
         ;apply bitmask
         and [rdi], dl
         ;exit
@@ -393,23 +410,26 @@ bim_fill_0:
         .LOAD_QWORD:
             mov qword [rdi], 0
             add rdi, 8
+            sub rbx, 64
             jmp .skipp1
         .LOAD_DWORD:
             mov dword [rdi], 0
             add rdi, 4
+            sub rbx, 32
             jmp .skipp1
         .LOAD_WORD:
             mov word [rdi], 0
             add rdi, 2
+            sub rbx, 16
             jmp .skipp1
         .LOAD_BYTE:
             mov byte [rdi], 0
             add rdi, 1
+            sub rbx, 8
             jmp .skipp1
         .skipp1:
 
         ;loop l1
-        dec rbx
         jmp .l1
     .exit:
     pop rdi
@@ -463,7 +483,6 @@ bim_fill_1:
     ;write byte
     or [rdi], dl
     xor rbx, rbx
-    ;set pointer to next byte
     .l1:
         ;check counter
         cmp rbx, 0
@@ -489,25 +508,28 @@ bim_fill_1:
         jmp .exit
 
         .LOAD_QWORD:
-            mov qword [rdi], 0
+            mov qword [rdi], -1
             add rdi, 8
+            sub rbx, 64
             jmp .skipp1
         .LOAD_DWORD:
-            mov dword [rdi], 0
+            mov dword [rdi], -1
             add rdi, 4
+            sub rbx, 32
             jmp .skipp1
         .LOAD_WORD:
-            mov word [rdi], 0
+            mov word [rdi], -1
             add rdi, 2
+            sub rbx, 16
             jmp .skipp1
         .LOAD_BYTE:
-            mov byte [rdi], 0
+            mov byte [rdi], -1
             add rdi, 1
+            sub rbx, 8
             jmp .skipp1
         .skipp1:
 
         ;loop l1
-        dec rbx
         jmp .l1
     .exit:
     pop rdi

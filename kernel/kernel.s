@@ -114,7 +114,11 @@ kernelstart:
     mov rdi, kernelend
     call mem_init
 
+    mov rax, 64
+    call mem_palloc
 
+    mov rax, 16
+    call mem_pfree
 
     ;Print done msg
     mov rdi, T_MSG_END

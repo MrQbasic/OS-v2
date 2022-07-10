@@ -2,8 +2,8 @@
 ;-------------------------------------------------------------------------------------------
 ;bim_get    rdi = pointer to bit map / rax = index of bit                                 =>   rdx = val
 ;bim_set    rdi = pointer to bit map / rax = index of bit / rdx = val
-;bim_find_0 rdi = pointer to bit map / rax = number of bits / rbx = max bits              =>   rdi = index
-;bim_find_1 rdi = pointer to bit map / rax = number of bits / rbx = max bits              =>   rax = index / CF = 1:not found 0:found
+;bim_find_0 rdi = pointer to bit map / rax = number of bits / rbx = max bits              =>   rdi = index / CF = 1:not found 0:found
+;bim_find_1 rdi = pointer to bit map / rax = number of bits / rbx = max bits              =>   rdi = index / CF = 1:not found 0:found
 ;bim_fill_0 rdi = pointer to bit map / rax = start index / rbx = number of bits
 ;bim_fill_1 rdi = pointer to bit map / rax = start index / rbx = number of bits
 ;-------------------------------------------------------------------------------------------
@@ -363,7 +363,7 @@ bim_fill_0:
     sub cl, dl
     sub rbx, rcx
     mov dl, 0xFF
-    shl dl, cl
+    shr dl, cl
     ;write byte
     and [rdi], dl
     ;set pointer to next byte
@@ -438,6 +438,8 @@ bim_fill_1:
     mov rcx, 8
     div rcx
     add rdi, rax
+    cmp rbx, 8
+    jl .skipp2    
     ;create bitmask and sub number of bit in first byte from target
     mov rcx, 8
     sub cl, dl
@@ -445,10 +447,23 @@ bim_fill_1:
     mov dl, 0xFF
     shl dl, cl
     ;write byte
-    xor dl, 0xFF
     or [rdi], dl
-    ;set pointer to next byte
     add rdi, 1
+    jmp .l1
+    ;create bitmask and set target to 0
+    .skipp2:
+    mov rax, rdx
+    mov rcx, 8
+    sub cl, bl
+    mov dl, 0xFF
+    shl dl, cl
+    shr dl, cl
+    mov cl, al
+    shl dl, cl
+    ;write byte
+    or [rdi], dl
+    xor rbx, rbx
+    ;set pointer to next byte
     .l1:
         ;check counter
         cmp rbx, 0
@@ -463,9 +478,10 @@ bim_fill_1:
         cmp rbx, 8
         jge .LOAD_BYTE
         ;generate bitmask for last byte
+        xor rdx, rdx
         mov cl, bl
         mov dl, 0xFF
-        shr dl, cl
+        shl dl, cl
         ;apply bitmask
         xor dl, 0xFF
         or [rdi], dl

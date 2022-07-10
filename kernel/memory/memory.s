@@ -1,7 +1,7 @@
 ;mem_init       rdi = pointer to memory system tables start
 ;mem_alloc      rarx = size                              => rdi = start addr
 ;mem_free       rdi = vaddr
-;mem_palloc     rax = number of pages                   => rdi = paddr
+;mem_palloc     rax = number of pages                    => rdi = paddr
 ;mem_pfree      rdi = paddr
 ;-------------------------------------------------------------------------------------------
 [bits 64]
@@ -118,15 +118,17 @@ mem_palloc:
         ;config for scan and do scan
         mov rdi, [rsi + 8 + 8]
         mov rbx, [rsi + 8]
-        call bim_find_0 
+        call bim_find_0
         jc .skipp1
         ;if memory space if found do this
         ;claim pages
-        
-        ;do bit_fill1
-
-        ;calc start addr
+        mov rbx, rax
         mov rax, rdi
+        mov rdi, [rsi + 8 + 8]
+        call bim_fill_1
+        mov rdx, rax
+        ;calc start addr
+        xor rdx, rdx
         mov rdi, 4096   ;size of one page
         mul rdi
         add rax, [rsi]  ;gerneral start addr of map space

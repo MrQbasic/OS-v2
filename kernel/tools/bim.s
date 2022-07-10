@@ -4,6 +4,8 @@
 ;bim_set    rdi = pointer to bit map / rax = index of bit / rdx = val
 ;bim_find_0 rdi = pointer to bit map / rax = number of bits / rbx = max bits              =>   rdi = index
 ;bim_find_1 rdi = pointer to bit map / rax = number of bits / rbx = max bits              =>   rax = index / CF = 1:not found 0:found
+;bim_fill_0 rdi = pointer to bit map / rax = start index / rbx = number of bits
+;bim_fill_1 rdi = pointer to bit map / rax = start index / rbx = number of bits
 ;-------------------------------------------------------------------------------------------
 [bits 64]
 
@@ -337,7 +339,168 @@ bim_find_1:
         mov rdi, 0
         stc
         ret
-        
+
+bim_fill_0:
+    push rax        ;start index
+    push rbx        ;number of bits to fill
+    push rcx
+    push rdx        ;data to write
+    push rsi
+    push rdi        ;start of bitmap
+    ;check input
+    test rbx, rbx
+    jz .exit
+    ;check if starting index is 0; if yes skipp first byte process
+    test rax, rax
+    jz .l1
+    ;calc starting addr based of first byte based on the starting index
+    xor rdx, rdx
+    mov rcx, 8
+    div rcx
+    add rdi, rax
+    ;create bitmask and sub number of bit in first byte from target
+    mov rcx, 8
+    sub cl, dl
+    sub rbx, rcx
+    mov dl, 0xFF
+    shl dl, cl
+    ;write byte
+    and [rdi], dl
+    ;set pointer to next byte
+    add rdi, 1
+    .l1:
+        ;check counter
+        cmp rbx, 0
+        je .exit
+        ;get size to write
+        cmp rbx, 64
+        jge .LOAD_QWORD
+        cmp rbx, 32
+        jge .LOAD_DWORD
+        cmp rbx, 16
+        jge .LOAD_WORD
+        cmp rbx, 8
+        jge .LOAD_BYTE
+        ;generate bitmask for last byte
+        mov cl, bl
+        mov dl, 0xFF
+        shr dl, cl
+        ;apply bitmask
+        and [rdi], dl
+        ;exit
+        jmp .exit
+
+        .LOAD_QWORD:
+            mov qword [rdi], 0
+            add rdi, 8
+            jmp .skipp1
+        .LOAD_DWORD:
+            mov dword [rdi], 0
+            add rdi, 4
+            jmp .skipp1
+        .LOAD_WORD:
+            mov word [rdi], 0
+            add rdi, 2
+            jmp .skipp1
+        .LOAD_BYTE:
+            mov byte [rdi], 0
+            add rdi, 1
+            jmp .skipp1
+        .skipp1:
+
+        ;loop l1
+        dec rbx
+        jmp .l1
+    .exit:
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    ret
+
+bim_fill_1:
+    push rax        ;start index
+    push rbx        ;number of bits to fill
+    push rcx
+    push rdx        ;data to write
+    push rsi
+    push rdi        ;start of bitmap
+    ;check input
+    test rbx, rbx
+    jz .exit
+    ;check if starting index is 0; if yes skipp first byte process
+    test rax, rax
+    jz .l1
+    ;calc starting addr based of first byte based on the starting index
+    xor rdx, rdx
+    mov rcx, 8
+    div rcx
+    add rdi, rax
+    ;create bitmask and sub number of bit in first byte from target
+    mov rcx, 8
+    sub cl, dl
+    sub rbx, rcx
+    mov dl, 0xFF
+    shl dl, cl
+    ;write byte
+    xor dl, 0xFF
+    or [rdi], dl
+    ;set pointer to next byte
+    add rdi, 1
+    .l1:
+        ;check counter
+        cmp rbx, 0
+        je .exit
+        ;get size to write
+        cmp rbx, 64
+        jge .LOAD_QWORD
+        cmp rbx, 32
+        jge .LOAD_DWORD
+        cmp rbx, 16
+        jge .LOAD_WORD
+        cmp rbx, 8
+        jge .LOAD_BYTE
+        ;generate bitmask for last byte
+        mov cl, bl
+        mov dl, 0xFF
+        shr dl, cl
+        ;apply bitmask
+        xor dl, 0xFF
+        or [rdi], dl
+        ;exit
+        jmp .exit
+
+        .LOAD_QWORD:
+            mov qword [rdi], 0
+            add rdi, 8
+            jmp .skipp1
+        .LOAD_DWORD:
+            mov dword [rdi], 0
+            add rdi, 4
+            jmp .skipp1
+        .LOAD_WORD:
+            mov word [rdi], 0
+            add rdi, 2
+            jmp .skipp1
+        .LOAD_BYTE:
+            mov byte [rdi], 0
+            add rdi, 1
+            jmp .skipp1
+        .skipp1:
+
+        ;loop l1
+        dec rbx
+        jmp .l1
+    .exit:
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    ret
 
 ;-------------------------------------------------------------------------------------------
 bim_error_search_0:         db "\nERROR-> can not find 0 bits in bitmap! Input other number!\e"

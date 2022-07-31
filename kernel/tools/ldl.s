@@ -3,13 +3,14 @@
 ;ldl_add       rdi = pointer to list  /  rsi = pointer to entry 
 ;ldl_get       rdi = pointer to list  /  rax = entry index          => rsi = pointer to entry
 ;ldl_remove    rdi = pointer to list  /  rax = entry index
+;ldl_end       rdi = pointer to list                                => rdi = pointer to last entry on list
 ;-------------------------------------------------------------------------------------------
 ldl_add:
     push rdi
     push rax
     .l1:
         mov rax, [rdi]      ;get pointer to next entry
-        cmp rax, 0xFFFFFFFFFFFFFFFF   ;check if pointer is end val
+        cmp rax, 0          ;check if pointer is end val
         je .exit            ;if yes then exit
         mov rdi, rax        ;if not set entry pointer to next entry        
         jmp .l1             ;loop
@@ -44,12 +45,12 @@ ldl_remove:
     ;get privious entry and set pointer to end val
     dec rax
     call ldl_get
-    mov qword [rsi], 0xFFFFFFFFFFFFFFFF
+    mov qword [rsi], 0
     mov rbx, rsi
     ;go back to input entry and check if it is last -> exit
     inc rax
     call ldl_get            
-    cmp qword [rsi], 0xFFFFFFFFFFFFFFFF
+    cmp qword [rsi], 0
     je .exit
     ;get addr of following entry
     inc rax
@@ -62,3 +63,11 @@ ldl_remove:
         pop rsi
         pop rdi 
         ret
+
+ldl_end:
+    cmp QWORD [rdi], 0
+    je .exit
+    mov rdi, [rdi]
+    jmp ldl_end
+    .exit:
+    ret

@@ -274,8 +274,6 @@ bim_find_1:
             mov rcx, rax
             jmp .skipp3
             .found:
-            call screen_space
-            call screen_print_yes
             dec rcx
             jnz .skipp3
             ;do this is all bits where found (calculate index of start bit in sequence)

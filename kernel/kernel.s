@@ -110,15 +110,25 @@ kernelstart:
         dec rcx
         jg .l2
 
-    ;init memory management system
+    ;init memory management system and print info
     mov rdi, kernelend
     call mem_init
+    mov rax, mem_vma_first_page
+    mov rax, [rax]
+    mov rdi, T_MSG_MEM_V_TBL
+    call screen_print_string
+    mov rax, mem_p_alloc
+    mov rax, [rax]
+    mov rdi, T_MSG_MEM_P_TBL
+    call screen_print_string
 
-    mov rax, 64
-    call mem_palloc
+    mov rax, 0x5
+    call mem_alloc
 
-    mov rax, 16
-    call mem_pfree
+    mov rdx, rdi
+    call screen_nl
+    call screen_print_hex_q
+
 
     ;Print done msg
     mov rdi, T_MSG_END
@@ -139,6 +149,8 @@ T_MSG_AHCI:         db "\nSetup AHCI\e"
 T_MSG_END:          db "\nDone with boot process \e"
 T_MSG_PAGE:         db "\nMAP_PAGES start addr: \rA\e"
 T_MSG_MEM:          db "\nMemory available: \e"
+T_MSG_MEM_P_TBL:    db "\nP-mem allocator addr: \rA\e"
+T_MSG_MEM_V_TBL:    db "\nV-mem allocator addr: \rA\e"
 T_MSG_SYSCNT:       db "\nSetup system counter\e"
 
 V_P_ADDR_BITS:      db 0

@@ -234,7 +234,7 @@ kernel64:
     ;-
 
     ;map the kernel
-    mov dx, 256
+    mov dx, 512
     mov cl, 0b00000011
     mov rax, next_kernel
     mov rbx, kernelstart

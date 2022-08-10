@@ -100,12 +100,12 @@ bim_find_0:
         cmp rbx, 08
         jge .LOAD_BYTE
         ;if there are not enough bit available to fill one unit, load a byte and set function to number of remaining bits
-            xor rdx, rdx
-            mov dl, [rdi]
-            mov rsi, rdx
-            mov rdx, rbx
-            xor rbx, rbx
-            jmp .l2
+        xor rdx, rdx
+        mov dl, [rdi]
+        mov rsi, rdx
+        mov rdx, rbx
+        xor rbx, rbx
+        jmp .l2
         ;setup sbr's for bit search loop
         .LOAD_QWORD:
             xor rdx, rdx
@@ -140,7 +140,7 @@ bim_find_0:
             ;check counter and exit if needed
             test dl, dl
             jz .skipp2
-            ;check if first bit is =0 
+            ;check if first bit is =0
             test rsi, 1
             je .found
             ;do this if checked bit is not wanted type
@@ -149,9 +149,10 @@ bim_find_0:
             .found:
             dec rcx
             jnz .skipp3
-            ;do this is all bits where found (calculate index of start bit in sequence)
+            ;do this if all bits where found (calculate index of start bit in sequence)
             ;calc bit index of current byte
             pop rsi
+            push rsi
             sub rdi, rsi
             add rdi, rdi
             add rdi, rdi
@@ -190,6 +191,7 @@ bim_find_0:
     ;to exit get regs back
     .exit:
     pop rsi
+    pop rsi
     pop rdx
     pop rcx
     pop rbx
@@ -225,12 +227,12 @@ bim_find_1:
         cmp rbx, 08
         jge .LOAD_BYTE
         ;if there are not enough bit available to fill one unit, load a byte and set function to number of remaining bits
-            xor rdx, rdx
-            mov dl, [rdi]
-            mov rsi, rdx
-            mov rdx, rbx
-            xor rbx, rbx
-            jmp .l2
+        xor rdx, rdx
+        mov dl, [rdi]
+        mov rsi, rdx
+        mov rdx, rbx
+        xor rbx, rbx
+        jmp .l2
         ;setup sbr's for bit search loop
         .LOAD_QWORD:
             xor rdx, rdx
@@ -279,6 +281,7 @@ bim_find_1:
             ;do this is all bits where found (calculate index of start bit in sequence)
             ;calc bit index of current byte
             pop rsi
+            push rsi
             sub rdi, rsi
             add rdi, rdi
             add rdi, rdi
@@ -329,6 +332,7 @@ bim_find_1:
         call screen_print_string
         jmp $
     error1:
+        pop rsi
         pop rsi
         pop rdx
         pop rcx

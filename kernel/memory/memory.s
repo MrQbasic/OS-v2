@@ -248,27 +248,6 @@ mem_pfree:
 ; 16 start of BIT-MAP
 ; 24 paddr - end
 ;-------------------------------------------------------------------------------------------
-;VMA-entry (head = 24 bytes)
-;---HEAD---
-;  8 pointer to next entry (0 if last)
-;  8 start - vADDR
-;  8 end   - vADDR
-;  8 pointer to start of Page List
-;---BODY--- (Page List)
-;  8 pointer to next Page List (0 if last)
-;  8 number of pages
-;  8 paddr
-;  8 paddr
-;  "   "
-;  8 paddr
-;-------------------------------------------------------------------------------------------
-;VMA-Page structure 4096 bytes (1 page)
-;    8 pointer to next entry (0 if last)
-;    8 pointer to previous entry (0 if first)
-;    8 bytes in alloc space free (1 BIT = 1 QWORD)
-;   64 bitmap of alloc space  
-; 4008 allocation space
-;-------------------------------------------------------------------------------------------
 ;vars
 
 mem_p_alloc:               dq 0

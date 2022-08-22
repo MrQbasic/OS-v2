@@ -110,25 +110,6 @@ kernelstart:
         dec rcx
         jg .l2
 
-    ;init memory management system and print info
-    mov rdi, kernelend
-    call mem_init
-    mov rax, mem_vma_first_page
-    mov rax, [rax]
-    mov rdi, T_MSG_MEM_V_TBL
-    call screen_print_string
-    mov rax, mem_p_alloc
-    mov rax, [rax]
-    mov rdi, T_MSG_MEM_P_TBL
-    call screen_print_string
-
-    mov rax, 0x5
-    call mem_alloc
-
-    mov rdx, rdi
-    call screen_nl
-    call screen_print_hex_q
-
 
     ;Print done msg
     mov rdi, T_MSG_END
@@ -165,9 +146,7 @@ BOOT_MEMMAP         equ 0x0000000000008000
 BOOT_MEMMAP_CNT     equ 0x0000000000007F00
 
 ;include tools
-%include "./tools/ldl.s"
 %include "./tools/bim.s"
-
 %include "./math.s"
 
 ;include drivers

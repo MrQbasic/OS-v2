@@ -21,6 +21,7 @@ page_map:
     ;setup filter
     mov rsi, V_P_ADDR_BITS
     mov cl, [rsi]
+    dec cl
     mov bl, 12
     call math_fill
     mov rsi, page_filter

@@ -1,6 +1,9 @@
+;mem_v_to_p               rdi = V-Addr                                      => rdi = paddr  /  cf = 1->error | 0->ok
+;---other-tools
 ;mem_init                 rdi = pointer to memory system tables start addr 
-;mem_palloc               rax = size (in pages)                    => rdi = paddr - start
+;mem_palloc               rax = size (in pages)                             => rdi = paddr(start)
 ;mem_pfree                rdi = paddr ptr / rax = number of pages
+;mem_alloc                rdi = size (in bytes)                             => rdi = addr(start) in kernelspace 
 ;-------------------------------------------------------------------------------------------
 [bits 64]
 
@@ -88,9 +91,19 @@ mem_init:
         jmp .l2
     .skipp3:
     inc rdi
-    
-    ;VMA setup
-
+    ;VMA setup with kernelspace
+    mov QWORD [rdi + mem_s_alloc_list_next], 0
+    mov QWORD [rdi + mem_s_alloc_list_start], kernelstart
+    mov rsi, mem_v_alloc
+    mov [rsi], rdi
+    ;setup pageig filter
+    mov rsi, V_P_ADDR_BITS
+    mov cl, [rsi]
+    dec cl
+    mov bl, 12
+    call math_fill
+    mov rsi, mem_pageing_filter
+    mov [rsi], rax
     ;exit
     pop rsi
     pop rdi 
@@ -240,6 +253,174 @@ mem_pfree:
         ret
 
 
+mem_alloc:
+    ;check input
+    test rdi, rdi
+    jz .error_invalidinput
+    ;save regs
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    ;---find v-space for alloc---
+    ;check if there is a list; if not then error out
+    xor rax, rax
+    mov rsi, mem_v_alloc
+    mov rsi, [rsi]
+    test rsi, rsi
+    jz .error_noinit
+    ;loop through list and find spot in list
+    .searchloop1:
+        ;check if the current entry is a valid entry
+        test rsi, rsi
+        jz .list_append
+        ;check if there is a last entry
+        test rax, rax
+        jz .next
+        ;check if there is space inbetween entries
+        mov rbx, [rsi + mem_s_alloc_list_start]
+        sub rbx, rax
+        sub rbx, mem_s_alloc_list_tail
+        
+
+        .next:
+        ;set pointer for next entry
+        mov rax, rsi
+        mov rsi, [rsi + mem_s_alloc_list_next]
+        ;loop to top
+        jmp .searchloop1
+    ;if there is no space found is list append to list
+    .list_append:
+        ;get pointer to start of entry
+        mov rcx, rax
+        add rax, mem_s_alloc_list_tail
+        ;setup tail
+        mov rbx, rax
+        add rbx, rdi
+        mov [rcx + mem_s_alloc_list_next], rbx
+        mov QWORD [rbx + mem_s_alloc_list_next], 0
+        mov QWORD [rbx + mem_s_alloc_list_start], rax
+        ;setup for exit
+        mov rdi, rax
+        jmp .exit
+
+    .list_found:
+        call screen_debug_bin
+
+    .exit:
+        pop rsi
+        pop rdx
+        pop rcx
+        pop rbx
+        pop rax
+        ret
+    .error_invalidinput:
+        mov rdi, mem_error_alloc_input
+        call screen_print_string
+        xor rdi, rdi
+        ret
+    .error_noinit:
+        mov rdi, mem_error_alloc_notinit
+        call screen_print_string
+        pop rsi
+        pop rdx
+        pop rcx
+        pop rbx
+        pop rax
+        jmp $        
+
+
+
+mem_v_to_p:
+    ;save regs
+    push rax
+    push rbx 
+    push rcx
+    push rdx
+    push rsi
+    ;load filter
+    mov rsi, mem_pageing_filter
+    mov r8, [rsi]
+    ;extract offset
+    mov rsi, rdi
+    and rsi, 0x0FFF
+    ;get addr of plm4
+    mov rcx, cr3
+    ;calc entry addr
+    mov rax, 0x0000FF8000000000
+    and rax, rdi
+    shr rax, 39
+    mov rdx, 8
+    mul rdx
+    add rax, rcx
+    ;eval entry
+    mov rax, [rax]
+    test rax, 1
+    jz .error_notfound
+    ;get addr of pdpt
+    and rax, r8
+    mov rcx, rax
+    ;calc entry addr
+    mov rax, 0x0000007FC0000000
+    and rax, rsi
+    shr rax, 39
+    mov rdx, 8
+    mul rdx
+    add rax, rcx
+    ;eval entry
+    mov rax, [rax]
+    test rax, 1
+    jz .error_notfound
+    ;get addr of pd
+    and rax, r8
+    mov rcx, rax
+    ;calc entry addr
+    mov rax, 0x000000003FE00000
+    and rax, rsi
+    shr rax, 39
+    mov rdx, 8
+    mul rdx
+    add rax, rcx
+    ;eval entry
+    mov rax, [rax]
+    test rax, 1
+    jz .error_notfound
+    ;get addr of pt
+    and rax, r8
+    mov rcx, rax
+    ;calc entry addr
+    mov rax, 0x00000000001FF000
+    and rax, rsi
+    shr rax, 39
+    mov rdx, 8
+    mul rdx
+    add rax, rcx
+    ;eval entry
+    mov rax, [rax]
+    test rax, 1
+    jz .error_notfound
+    ;get addr of page
+    and rax, r8
+    mov rcx, rax
+    ;add offset
+    add rsi, rcx
+    .exit:
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    clc
+    ret
+    .error_notfound: 
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    stc
+    ret
 
 ;-------------------------------------------------------------------------------------------
 ;MEM MAP BETTER REPRESENTATION 24 bytes
@@ -247,15 +428,22 @@ mem_pfree:
 ;  8 number of pages
 ; 16 start of BIT-MAP
 ; 24 paddr - end
+;VMA Entry TAIL
+;  0 next entry(0 if last)
+;  8 start vaddr
 ;-------------------------------------------------------------------------------------------
 ;vars
 
 mem_p_alloc:               dq 0
 
+mem_v_alloc:               dq 0
+
 mem_buffer:                dq 0
 
 mem_memmap_cnt:            dq 0
 mem_memmap_start:          dq 0
+
+mem_pageing_filter:        dq 0
 
 ;-------------------------------------------------------------------------------------------
 ;error msgs
@@ -264,7 +452,10 @@ mem_error_palloc_error0:   db "\nERROR-> CAN NOT ALLOCATE 0 PAGES!\e"
 mem_error_palloc_nospace:  db "\nERROR-> OUT OF P-MEMORY!\e"
 mem_error_pfree_notfound:  db "\nERROR-> THERE IS NO PAGE WITH ADDR: 0x\rA!\e"
 mem_warn_pfree_notvalid:   db "\nWARNING-> \rA IS NOT A VALID PAGE ADDRESS!\e"
-mem_error_alloc_nospace:   db "\nERROR-> OUT OF MEMORY! MEMORY ALLOCATOR CAN NOT WORK PROPERLY!\e"
-mem_error_free_notfound:   db "\nERROR-> THER IS NO ALLOCATED MEMORY AT: 0x\rA!\e"
-mem_warn_free_notvalid:    db "\nWARNING-> 0x\rA IS NOT A VALID ADDRESS!\e"
+mem_error_alloc_input:     db "\nERROR-> CAN NOT ALLOCATE 0 PAGES!\e"
+mem_error_alloc_notinit:   db "\nERROR-> MEM ALLOC NOT READY! FATAL ERROR\e"
 ;-------------------------------------------------------------------------------------------
+;struct helper
+mem_s_alloc_list_next      equ  0
+mem_s_alloc_list_start     equ  8
+mem_s_alloc_list_tail      equ  16  ;size of tail

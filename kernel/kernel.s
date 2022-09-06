@@ -124,8 +124,19 @@ kernelstart:
     call mem_alloc
     mov QWORD [rdi], 0xFFFFFFFFFFFFFFFF
     mov rdx, rdi
+    mov rbx, rdi
     call screen_nl
     call screen_print_hex_q
+
+    mov rdi, 8
+    call mem_alloc
+    mov QWORD [rdi], 0xFFFFFFFFFFFFFFFF
+    mov rdx, rdi
+    call screen_nl
+    call screen_print_hex_q
+
+    mov rdi, rbx
+    call mem_free
 
     mov rdi, 8
     call mem_alloc

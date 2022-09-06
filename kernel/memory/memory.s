@@ -4,6 +4,7 @@
 ;mem_palloc               rax = size (in pages)                             => rdi = paddr(start)
 ;mem_pfree                rdi = paddr ptr / rax = number of pages
 ;mem_alloc                rdi = size (in bytes)                             => rdi = addr(start) in kernelspace 
+;mem_free                 rdi = start                                       => cf -> 1=error | 0=ok
 ;-------------------------------------------------------------------------------------------
 [bits 64]
 
@@ -265,11 +266,14 @@ mem_alloc:
     push rsi
     ;---find v-space for alloc---
     ;check if there is a list; if not then error out
+    test rsi, rsi
+    jz .error_noinit
     xor rax, rax
     mov rsi, mem_v_alloc
     mov rsi, [rsi]
-    test rsi, rsi
-    jz .error_noinit
+    ;pre calc inp size + tail size
+    mov rcx, rdi
+    add rcx, mem_s_alloc_list_tail
     ;loop through list and find spot in list
     .searchloop1:
         ;check if the current entry is a valid entry
@@ -278,12 +282,15 @@ mem_alloc:
         ;check if there is a last entry
         test rax, rax
         jz .next
-        ;check if there is space inbetween entries
+        ;calc space between entries
         mov rbx, [rsi + mem_s_alloc_list_start]
         sub rbx, rax
         sub rbx, mem_s_alloc_list_tail
-        
-
+        ;check if the space is enough to fit needed mem + tail -> if not then skipp
+        cmp rbx, rcx
+        jl .next
+        ;exit loop and setup in that space
+        jmp .list_found
         .next:
         ;set pointer for next entry
         mov rax, rsi
@@ -300,6 +307,7 @@ mem_alloc:
         add rbx, rdi
         mov [rcx + mem_s_alloc_list_next], rbx
         mov QWORD [rbx + mem_s_alloc_list_next], 0
+        mov QWORD [rbx + mem_s_alloc_list_prev], rcx
         mov QWORD [rbx + mem_s_alloc_list_start], rax
         ;setup for exit
         mov rdi, rax
@@ -330,8 +338,57 @@ mem_alloc:
         pop rax
         jmp $        
 
-
-
+mem_free:
+    ;save regs
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    ;get pointer to first
+    mov rsi, mem_v_alloc
+    mov rsi, [rsi]
+    ;search list
+    .l1:
+        ;check if there is an entry
+        test rsi, rsi
+        jz .error_notfound
+        ;check if we found the entry
+        cmp rdi, [rsi + mem_s_alloc_list_start]
+        je .found
+        ;load next entry
+        mov rsi, [rsi]
+        ;loop to top
+        jmp .l1
+    .found:
+    ;get pointer(1) to prev entry
+    mov rdi, [rsi + mem_s_alloc_list_prev]
+    ;get pointer(2) to next entry
+    mov rsi, [rsi + mem_s_alloc_list_next]
+    ;set prev of next entry to prev / set next of prev entry to next -> remove entry from list
+    mov [rsi + mem_s_alloc_list_prev], rdi
+    mov [rdi + mem_s_alloc_list_next], rsi
+    ;exit
+    .exit:
+        pop rdi
+        pop rsi
+        pop rdx
+        pop rcx
+        pop rbx
+        pop rax
+        clc
+        ret
+    .error_notfound:
+        pop rdi
+        pop rsi
+        pop rdx
+        pop rcx
+        pop rbx
+        pop rax
+        stc
+        ret
+    
 mem_v_to_p:
     ;save regs
     push rax
@@ -430,7 +487,8 @@ mem_v_to_p:
 ; 24 paddr - end
 ;VMA Entry TAIL
 ;  0 next entry(0 if last)
-;  8 start vaddr
+;  8 prev entry
+; 16 start vaddr
 ;-------------------------------------------------------------------------------------------
 ;vars
 
@@ -457,5 +515,6 @@ mem_error_alloc_notinit:   db "\nERROR-> MEM ALLOC NOT READY! FATAL ERROR\e"
 ;-------------------------------------------------------------------------------------------
 ;struct helper
 mem_s_alloc_list_next      equ  0
-mem_s_alloc_list_start     equ  8
-mem_s_alloc_list_tail      equ  16  ;size of tail
+mem_s_alloc_list_prev      equ  8
+mem_s_alloc_list_start     equ  16
+mem_s_alloc_list_tail      equ  24  ;size of tail

@@ -145,6 +145,13 @@ kernelstart:
     call screen_nl
     call screen_print_hex_q
 
+    mov rdi, 8
+    call mem_alloc
+    mov QWORD [rdi], 0xFFFFFFFFFFFFFFFF
+    mov rdx, rdi
+    call screen_nl
+    call screen_print_hex_q
+
     ;Print done msg
     mov rdi, T_MSG_END
     call screen_print_string

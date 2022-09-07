@@ -119,7 +119,6 @@ mem_init:
         jmp $
 
 
-
 mem_palloc:
     push rax
     push rbx
@@ -314,8 +313,23 @@ mem_alloc:
         jmp .exit
 
     .list_found:
-        call screen_debug_bin
-
+        ;get pointer to tail of new entry
+        mov rbx, rax
+        add rbx, mem_s_alloc_list_tail
+        mov rdx, rbx
+        add rbx, rdi
+        ;setup entry
+        mov [rbx + mem_s_alloc_list_prev], rax
+        mov rcx, [rax + mem_s_alloc_list_next]
+        mov [rbx + mem_s_alloc_list_next], rcx
+        mov [rbx + mem_s_alloc_list_start], rdx
+        ;setup prev entry
+        mov [rax + mem_s_alloc_list_next], rbx
+        ;setup next entry
+        mov [rcx + mem_s_alloc_list_prev], rbx
+        ;setup output
+        mov rdi, rdx 
+        ;exit
     .exit:
         pop rsi
         pop rdx

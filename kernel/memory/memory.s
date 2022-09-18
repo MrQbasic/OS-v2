@@ -301,17 +301,18 @@ mem_alloc:
         ;get pointer to start of entry
         mov rcx, rax
         add rax, mem_s_alloc_list_tail
-        ;setup tail
+        ;get pointer to tail
         mov rbx, rax
         add rbx, rdi
+        ;add entry to list
         mov [rcx + mem_s_alloc_list_next], rbx
+        ;setup tail
         mov QWORD [rbx + mem_s_alloc_list_next], 0
         mov QWORD [rbx + mem_s_alloc_list_prev], rcx
         mov QWORD [rbx + mem_s_alloc_list_start], rax
-        ;setup for exit
-        mov rdi, rax
-        jmp .exit
-
+        ;alloc pages
+        mov rdx, rax
+        jmp .palloc
     .list_found:
         ;get pointer to tail of new entry
         mov rbx, rax
@@ -323,12 +324,40 @@ mem_alloc:
         mov rcx, [rax + mem_s_alloc_list_next]
         mov [rbx + mem_s_alloc_list_next], rcx
         mov [rbx + mem_s_alloc_list_start], rdx
-        ;setup prev entry
+        ;insert entry into list
         mov [rax + mem_s_alloc_list_next], rbx
-        ;setup next entry
         mov [rcx + mem_s_alloc_list_prev], rbx
-        ;setup output
-        mov rdi, rdx 
+    ;--alloc pages--
+    ;--input: rdx:start rbx:tail rcx
+    .palloc:
+        ;setup pointers etc
+        mov rdi, rdx
+        add rbx, mem_s_alloc_list_tail
+        dec rbx
+        and rbx, 0xFFFFFFFFFFFFF000
+        mov rax, 1 
+        ;check if the start is on a new page
+        test rdx, 0x0FFF
+        and rdx, 0xFFFFFFFFFFFFF000
+        jz .list_append_skipp1
+            ;check if the end is on a new page -> if not then exit
+            cmp rdx, rbx
+            je .exit
+            call screen_debug_hex
+            jmp $
+        .list_append_iter1:
+            
+            ;alloc page
+            .list_append_skipp1:
+            call mem_palloc
+            call screen_debug_hex
+            call screen_nl
+            call screen_print_yes
+            jmp $
+
+
+            jmp .list_append_iter1
+
         ;exit
     .exit:
         pop rsi
@@ -361,28 +390,87 @@ mem_free:
     push rsi
     push rdi
     ;get pointer to first
-    mov rsi, mem_v_alloc
-    mov rsi, [rsi]
+    mov rax, mem_v_alloc
+    mov rax, [rax]
     ;search list
     .l1:
         ;check if there is an entry
-        test rsi, rsi
+        test rax, rax
         jz .error_notfound
         ;check if we found the entry
-        cmp rdi, [rsi + mem_s_alloc_list_start]
+        cmp rdi, [rax + mem_s_alloc_list_start]
         je .found
         ;load next entry
-        mov rsi, [rsi]
+        mov rax, [rax]
         ;loop to top
         jmp .l1
     .found:
     ;get pointer(1) to prev entry
-    mov rdi, [rsi + mem_s_alloc_list_prev]
+    mov rdi, [rax + mem_s_alloc_list_prev]
     ;get pointer(2) to next entry
-    mov rsi, [rsi + mem_s_alloc_list_next]
+    mov rsi, [rax + mem_s_alloc_list_next]
+    ;check if it is the last entry
+    test rsi, rsi
+    jz .last
     ;set prev of next entry to prev / set next of prev entry to next -> remove entry from list
     mov [rsi + mem_s_alloc_list_prev], rdi
     mov [rdi + mem_s_alloc_list_next], rsi
+
+
+
+    
+    jmp .exit
+    .last:
+        mov rsi, rdi
+        ;remove entry from list
+        mov QWORD [rsi + mem_s_alloc_list_next], 0
+        ;setup for loop
+        ;get start page of entry
+        mov rbx, [rax + mem_s_alloc_list_start]
+        and rbx, 0xFFFFFFFFFFFFF000
+        ;get end page of entry
+        add rax, mem_s_alloc_list_tail
+        and rax, 0xFFFFFFFFFFFFF000
+        ;get end page of prev entry
+        add rsi, mem_s_alloc_list_tail - 1
+        and rsi, 0xFFFFFFFFFFFFF000
+        ;check if entry is one page long
+        cmp rax, rbx
+        je .last_onepage
+        ;chek if the 1. entey is clearable
+        cmp rbx, rsi
+        je .last_skipp1
+        ;loop though all pages
+        .last_l2:
+            ;FREE PAGE
+            push rax
+            mov rdi, rbx
+            mov rax, 1
+            call mem_v_to_p
+            jc .error_unexpected
+            call mem_pfree
+            pop rax
+            ;check if it is done
+            cmp rbx, rax
+            je .exit
+            ;-
+            .last_skipp1:
+            ;set pointer to next page
+            add rbx, 0x1000
+            ;loop to top
+            jmp .last_l2
+
+        .last_onepage:
+        ;call screen_debug_hex
+        ;check if the prev ends on the same page the entry starts on
+        cmp rsi, rax
+        je .exit
+        
+        ;UNMAP PAGE
+        call screen_debug_bin
+        jmp $
+
+    .used:
     ;exit
     .exit:
         pop rdi
@@ -402,6 +490,10 @@ mem_free:
         pop rax
         stc
         ret
+    .error_unexpected:
+        mov rdi, mem_error_free_unexpected
+        call screen_print_string
+        jmp $
     
 mem_v_to_p:
     ;save regs
@@ -526,6 +618,7 @@ mem_error_pfree_notfound:  db "\nERROR-> THERE IS NO PAGE WITH ADDR: 0x\rA!\e"
 mem_warn_pfree_notvalid:   db "\nWARNING-> \rA IS NOT A VALID PAGE ADDRESS!\e"
 mem_error_alloc_input:     db "\nERROR-> CAN NOT ALLOCATE 0 PAGES!\e"
 mem_error_alloc_notinit:   db "\nERROR-> MEM ALLOC NOT READY! FATAL ERROR\e"
+mem_error_free_unexpected: db "\nERROR-> TRYING TO FREE \rB BUT IT IS ALREADY FREE!\e"
 ;-------------------------------------------------------------------------------------------
 ;struct helper
 mem_s_alloc_list_next      equ  0

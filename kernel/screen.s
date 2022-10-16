@@ -23,7 +23,9 @@
 ;screen_print_yes
 ;screen_print_no
 ;screen_debug_hex
+;screen_debug_hex_all
 ;screen_debug_bin
+;screen_debug_bin_all
 ;screen_memdump           rdi = pointer to mem / rax = number of bytes
 ;-------------------------------------------------------------------------------------------
 screen_space:
@@ -602,6 +604,83 @@ screen_print_dec:
     pop rax
     ret
 
+
+screen_debug_hex_all:
+    ;print A B C D DI SI
+    call screen_debug_hex
+    ;save regs
+    push rdi
+    push rdx
+    push rcx
+    ;get pointer to first text
+    mov rdi, T_R08
+    ;setup counter
+    mov rcx, 8
+    ;save all regs to display on stack
+    push r8
+    push r9
+    push r10
+    push r11
+    push r12
+    push r13
+    push r14
+    push r15
+    ;loop
+    .l1:
+        ;get reg to pirint
+        pop rdx
+        ;print
+        call screen_print_string
+        call screen_print_hex_q
+        ;set pointer to next strin
+        add rdi, T_R_SIZE
+        ;dec counter and check if end
+        dec rcx
+        jnz .l1     
+    ;get regs back & exit
+    pop rcx
+    pop rdx
+    pop rdi
+    ret
+
+screen_debug_bin_all:
+    ;print A B C D DI SI
+    call screen_debug_bin
+    ;save regs
+    push rdi
+    push rdx
+    push rcx
+    ;get pointer to first text
+    mov rdi, T_R08
+    ;setup counter
+    mov rcx, 8
+    ;save all regs to display on stack
+    push r8
+    push r9
+    push r10
+    push r11
+    push r12
+    push r13
+    push r14
+    push r15
+    ;loop
+    .l1:
+        ;get reg to pirint
+        pop rdx
+        ;print
+        call screen_print_string
+        call screen_print_bin_q
+        ;set pointer to next strin
+        add rdi, T_R_SIZE
+        ;dec counter and check if end
+        dec rcx
+        jnz .l1     
+    ;get regs back & exit
+    pop rcx
+    pop rdx
+    pop rdi
+    ret
+
 ;-------------------------------------------------------------------------------------------
 ;Const
 DEFAULT_COLOR       equ 0x0A
@@ -630,6 +709,15 @@ T_RCX:              db "\nRCX: \e"
 T_RDX:              db "\nRDX: \e"
 T_RDI:              db "\nRDI: \e"
 T_RSI:              db "\nRSI: \e"
+T_R08:              db "\nR08: \e"
+T_R09:              db "\nR09: \e"
+T_R10:              db "\nR10: \e"
+T_R11:              db "\nR11: \e"
+T_R12:              db "\nR12: \e"
+T_R13:              db "\nR13: \e"
+T_R14:              db "\nR14: \e"
+T_R15:              db "\nR15: \e"
+T_R_SIZE            equ $ - T_R15
 
 T_BYTE:             db " B\e"
 T_KILOBYTE:         db " KiB\e"

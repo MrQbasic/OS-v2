@@ -617,14 +617,14 @@ screen_debug_hex_all:
     ;setup counter
     mov rcx, 8
     ;save all regs to display on stack
-    push r8
-    push r9
-    push r10
-    push r11
-    push r12
-    push r13
-    push r14
     push r15
+    push r14
+    push r13
+    push r12
+    push r11
+    push r10
+    push r9
+    push r8
     ;loop
     .l1:
         ;get reg to pirint
@@ -655,14 +655,14 @@ screen_debug_bin_all:
     ;setup counter
     mov rcx, 8
     ;save all regs to display on stack
-    push r8
-    push r9
-    push r10
-    push r11
-    push r12
-    push r13
-    push r14
     push r15
+    push r14
+    push r13
+    push r12
+    push r11
+    push r10
+    push r9
+    push r8
     ;loop
     .l1:
         ;get reg to pirint

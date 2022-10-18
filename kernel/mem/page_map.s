@@ -9,6 +9,7 @@ page_map:
     push rbx
     push rcx
     push rdx
+    push r8
     ;save the input values
     mov rsi, page_buffer_p_addr
     mov [rsi], rax
@@ -28,8 +29,7 @@ page_map:
     mov [rsi], rax
     ;get the PML4 addr from cr3
     mov rdx, cr3
-    mov rsi, page_pml4_base
-    mov [rsi], rdx
+    mov r8, rdx
     ;get pointer to PML4E
     mov rsi, page_buffer_v_addr
     mov rbx, [rsi]
@@ -38,18 +38,14 @@ page_map:
     shr rbx, 39
     mov rax, 8
     mul rbx
-    mov rsi, page_pml4_base
-    add rax, [rsi]
+    add rax, r8
     mov rbx, [rax]
-    mov rsi, page_pml4e
-    mov [rsi], rbx
     ;get the PDPT_base from PML4E
     test rbx, 1
     jz .no_pml4e
     mov rsi, page_filter
     and rbx, [rsi]
-    mov rsi, page_pdpt_base
-    mov [rsi], rbx
+    mov r8, rbx
     ;get the PDPTE
     mov rdx, 0x7FC0000000
     mov rsi, page_buffer_v_addr
@@ -58,18 +54,14 @@ page_map:
     shr rbx, 30
     mov rax, 8
     mul rbx
-    mov rsi, page_pdpt_base
-    add rax, [rsi]
+    add rax, r8
     mov rbx, [rax]
-    mov rsi, page_pdpte
-    mov [rsi], rbx
     ;get the PD_base from PDPTE
     test rbx, 1
     jz .no_pdpt
     mov rsi, page_filter
     and rbx, [rsi]
-    mov rsi, page_pd_base
-    mov [rsi], rbx
+    mov r8, rbx
     ;get the PDE
     mov rdx, 0x3FE00000
     mov rsi, page_buffer_v_addr
@@ -78,18 +70,14 @@ page_map:
     shr rbx, 21
     mov rax, 8
     mul rbx 
-    mov rsi, page_pd_base
-    add rax, [rsi]
+    add rax, r8
     mov rbx, [rax]
-    mov rsi, page_pde
-    mov [rsi], rbx
     ;get the PT_base from PDE
     test rbx, 1
     jz .no_pd
     mov rsi, page_filter
     and rbx, [rsi]
-    mov rsi, page_pt_base
-    mov [rsi], rbx
+    mov r8, rbx
     ;set the PTE
     mov rdx, 0x1FF000
     mov rsi, page_buffer_v_addr
@@ -98,8 +86,7 @@ page_map:
     shr rbx, 12
     mov rax, 8
     mul rbx
-    mov rsi, page_pt_base
-    add rax, [rsi]
+    add rax, r8
     ;-
     mov rsi, page_buffer_p_addr
     mov rbx, [rsi]
@@ -109,6 +96,7 @@ page_map:
     mov rsi, page_buffer_flags
     or bl, [rsi]
     mov [rax], rbx
+    pop r8
     pop rdx
     pop rcx
     pop rbx
@@ -122,16 +110,6 @@ page_map:
         jmp $
     .no_pd:
         jmp $
-
-
-page_pml4e:         dq 0
-page_pdpte:         dq 0
-page_pde:           dq 0
-
-page_pml4_base:     dq 0
-page_pdpt_base:     dq 0
-page_pd_base:       dq 0
-page_pt_base:       dq 0
 
 page_buffer_p_addr: dq 0
 page_buffer_v_addr: dq 0

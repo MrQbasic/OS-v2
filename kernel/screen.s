@@ -370,15 +370,13 @@ screen_print_no:
     ret
 
 screen_stackdump:
-    push rdi 
-    push rdx
-    push rcx
+    pop r9
     ;get the stack size
-    mov edx, ebp                ;get stack base addr 
-    sub edx, esp                ;stakc base addr - stack pointer addr = stack size
-    mov rdi, T_SIZE             ;set pointer to string
-    call screen_print_string    ;print string
-    call screen_print_hex_d     ;print number -> stack size
+    mov rdx, rbp                ;get stack base addr 
+    sub rdx, rsp                ;stakc base addr - stack pointer addr = stack size
+    mov rdi, T_SIZE             ;print string
+    call screen_print_string    
+    call screen_print_hex_d     ;print stacksize
     xor rcx, rcx
     mov ecx, edx
     ;print the stack
@@ -386,12 +384,9 @@ screen_stackdump:
         pop rdx
         call screen_nl
         call screen_print_hex_q
-        loop .loop1
-    ;return
-    pop rcx 
-    pop rdx
-    pop rdi
-    ret
+        sub rcx, 8
+        jnz .loop1
+    jmp $
 
 screen_debug_hex:
     push rdx

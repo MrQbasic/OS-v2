@@ -112,13 +112,14 @@ kernelstart:
 
     ;init memory management system for kernelspace
     call mem_init
+    
+    mov rax, 0x0000_0000_0000_1000
+    mov rbx, 0xFFFF_FFFF_FFFF_F000
+    call mem_page_map
 
-    mov rdi, 8
-    call mem_alloc
-    mov QWORD [rdi], 0xFFFFFFFFFFFFFFFF
-    mov rdx, rdi
-    call screen_nl
-    call screen_print_hex_q
+
+    call screen_print_yes
+    jmp $
 
     mov rdi, 4096
     call mem_alloc
@@ -180,6 +181,7 @@ BOOT_MEMMAP_CNT     equ 0x0000000000007F00
 %include "./mem/page_map.s"
 
 %include "./memory/memory.s"
+%include "./memory/page_map.s"
 
 align 0x1000    ;get end of kernel page aligned
 memorymap:      db 0

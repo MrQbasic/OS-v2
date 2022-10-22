@@ -105,6 +105,8 @@ mem_init:
     call math_fill
     mov rsi, mem_pageing_filter
     mov [rsi], rax
+    ;fill up reserved pages for page map
+    
     ;exit
     pop rsi
     pop rdi 
@@ -272,7 +274,7 @@ mem_alloc:
     mov rsi, [rsi]
     ;pre calc inp size + tail size
     mov rcx, rdi
-    add rcx, mem_s_alloc_list_tail
+    add rcx, mem_s_alloc_list_tail_s
     ;loop through list and find spot in list
     .searchloop1:
         ;check if the current entry is a valid entry
@@ -284,7 +286,7 @@ mem_alloc:
         ;calc space between entries
         mov rbx, [rsi + mem_s_alloc_list_start]
         sub rbx, rax
-        sub rbx, mem_s_alloc_list_tail
+        sub rbx, mem_s_alloc_list_tail_s
         ;check if the space is enough to fit needed mem + tail -> if not then skipp
         cmp rbx, rcx
         jl .next
@@ -300,7 +302,7 @@ mem_alloc:
     .list_append:
         ;get pointer to start of entry
         mov rcx, rax
-        add rax, mem_s_alloc_list_tail
+        add rax, mem_s_alloc_list_tail_s
         ;get pointer to tail
         mov rbx, rax
         add rbx, rdi
@@ -310,13 +312,15 @@ mem_alloc:
         mov QWORD [rbx + mem_s_alloc_list_next], 0
         mov QWORD [rbx + mem_s_alloc_list_prev], rcx
         mov QWORD [rbx + mem_s_alloc_list_start], rax
-        ;alloc pages
+        ;setup for palloc
+        mov r8, 0xFFFF_FFFF_FFFF_FFFF
+        mov r9, rcx
         mov rdx, rax
         jmp .palloc
     .list_found:
         ;get pointer to tail of new entry
         mov rbx, rax
-        add rbx, mem_s_alloc_list_tail
+        add rbx, mem_s_alloc_list_tail_s
         mov rdx, rbx
         add rbx, rdi
         ;setup entry
@@ -327,37 +331,82 @@ mem_alloc:
         ;insert entry into list
         mov [rax + mem_s_alloc_list_next], rbx
         mov [rcx + mem_s_alloc_list_prev], rbx
+        ;setup for palloc
+        mov r8, rcx
+        mov r9, rax
     ;--alloc pages--
-    ;--input: rdx:start rbx:tail rcx
+    ;--input: rdx:start rbx:tail r8:start of next(0xFFFF_FFFF_FFFF_FFFF is there is no next) r9:end of prev(0 if there is no prev)
     .palloc:
-        ;setup pointers etc
-        mov rdi, rdx
-        add rbx, mem_s_alloc_list_tail
+        ;---REG---
+        ; A  - 
+        ; B  - END   OF E
+        ; C  - 
+        ; D  - START OF E
+        ; 08 - TAIL  OF NEXT  ------> PAGE OF START OF NEXT
+        ; 09 - TAIL  OF PREV  ------> PAGE OF END   OF PREV
+        ; 10 - PAGE  OF START OF E
+        ; 11 - PAGE  OF END   OF E
+        ;---------
+        ;
+        ;---setup regs---
+        ;clac END OF E
+
+        call screen_clear
+
+        add rbx, mem_s_alloc_list_tail_s
         dec rbx
-        and rbx, 0xFFFFFFFFFFFFF000
-        mov rax, 1 
-        ;check if the start is on a new page
-        test rdx, 0x0FFF
-        and rdx, 0xFFFFFFFFFFFFF000
-        jz .list_append_skipp1
-            ;check if the end is on a new page -> if not then exit
-            cmp rdx, rbx
-            je .exit
-            call screen_debug_hex
-            jmp $
-        .list_append_iter1:
-            
-            ;alloc page
-            .list_append_skipp1:
+        ;filter pages out of E
+        mov r10, rdx
+        mov r11, rbx
+        mov rax, mem_pagefilter
+        and r10, rax
+        and r11, rax
+        ;check for existing next
+        cmp r8, 0xFFFF_FFFF_FFFF_FFFF
+        je .skipp1
+            ;get start from tail
+            mov r8, [r8 + mem_s_alloc_list_start]
+            ;filter page
+            and r8, rax
+            ;clamp val
+            cmp r8, r11
+            ja .skipp1 
+                mov r8, r11
+        .skipp1:
+        ;check for existing prev
+        cmp r9, 0x0000_0000_0000_0000
+        je .skipp2
+            ;get end from tail
+            add r9, mem_s_alloc_list_tail_s
+            dec r9
+            ;filter page
+            and r9, rax
+            ;clamp val
+            cmp r9, r10
+            jne .skipp2
+                ;check if there is space to clamp
+                cmp r10, r11
+                je .exit
+                ;set start of E to next page
+                add r10, 0x0000_0000_0000_1000
+        .skipp2:
+        ;loop over all pages to palloc
+        .iter1:
+            ;get 1 page
+            mov rax, 1
             call mem_palloc
-            call screen_debug_hex
-            call screen_nl
-            call screen_print_yes
-            jmp $
-
-
-            jmp .list_append_iter1
-
+            ;palloc r10 -> pointer to current page
+            mov rax, rdi
+            mov rbx, r10
+            mov cl, 0b00000011
+            call page_map
+            ;check if it is done
+            cmp r10, r11
+            je .exit
+            ;set pointer to next page
+            add r10, 0x0000_0000_0000_1000
+            ;loop
+            jmp .iter1
         ;exit
     .exit:
         pop rsi
@@ -429,10 +478,10 @@ mem_free:
         mov rbx, [rax + mem_s_alloc_list_start]
         and rbx, 0xFFFFFFFFFFFFF000
         ;get end page of entry
-        add rax, mem_s_alloc_list_tail
+        add rax, mem_s_alloc_list_tail_s
         and rax, 0xFFFFFFFFFFFFF000
         ;get end page of prev entry
-        add rsi, mem_s_alloc_list_tail - 1
+        add rsi, mem_s_alloc_list_tail_s - 1
         and rsi, 0xFFFFFFFFFFFFF000
         ;check if entry is one page long
         cmp rax, rbx
@@ -609,6 +658,8 @@ mem_memmap_start:          dq 0
 
 mem_pageing_filter:        dq 0
 
+mem_pagefilter             equ 0xFFFF_FFFF_FFFF_F000
+
 ;-------------------------------------------------------------------------------------------
 ;error msgs
 mem_error_init_error0:     db "\nERROR-> IT APPEARS THAT THE MEMORY MAP HAS NO USEABLE ENTRIES TO ALLOCATE!\e"
@@ -624,4 +675,4 @@ mem_error_free_unexpected: db "\nERROR-> TRYING TO FREE \rB BUT IT IS ALREADY FR
 mem_s_alloc_list_next      equ  0
 mem_s_alloc_list_prev      equ  8
 mem_s_alloc_list_start     equ  16
-mem_s_alloc_list_tail      equ  24  ;size of tail
+mem_s_alloc_list_tail_s    equ  24  ;size of tail

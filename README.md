@@ -9,5 +9,3 @@ Windows:
 Linux:
 + Compile: lmake/make.sh
 + Run: lmake/run.sh
-
-THIS PROJECT IS NOT 100% WORKING!

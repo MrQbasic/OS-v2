@@ -113,12 +113,23 @@ kernelstart:
     ;init memory management system for kernelspace
     call mem_init
     
-    mov rax, 0x0000_0000_0000_1000
-    mov rbx, 0xFFFF_FFFF_FFFF_F000
-    call mem_page_map
-
+    call screen_nl
+    mov rdi, 0x0000_0000_0000_1000
+    mov rax, 0x0000_0000_0000_1010
+    call mem_alloc_aligned
 
     call screen_print_yes
+
+    jmp $ 
+
+    mov rax, 0x0000_0000_0000_1000
+    mov rbx, 0xFFFF_FFFF_FFFF_F000
+    ;mov rbx, 0x1000
+    call mem_page_map
+
+    call screen_nl
+    call screen_print_yes
+    
     jmp $
 
     mov rdi, 4096

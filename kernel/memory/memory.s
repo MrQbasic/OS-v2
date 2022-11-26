@@ -3,7 +3,8 @@
 ;mem_init                 rdi = pointer to memory system tables start addr 
 ;mem_palloc               rax = size (in pages)                             => rdi = paddr(start)
 ;mem_pfree                rdi = paddr ptr / rax = number of pages
-;mem_alloc                rdi = size (in bytes)                             => rdi = addr(start) in kernelspace 
+;mem_alloc                rdi = size (in bytes)                             => rdi = addr(start) in kernelspace
+;mem_alloc_aligned        rdi = size (in bytes) rax = offset to page        => rdi = addr(start) in kernelspace 
 ;mem_free                 rdi = start                                       => cf -> 1=error | 0=ok
 ;-------------------------------------------------------------------------------------------
 [bits 64]
@@ -267,15 +268,15 @@ mem_alloc:
     push rsi
     ;---find v-space for alloc---
     ;check if there is a list; if not then error out
-    test rsi, rsi
-    jz .error_noinit
-    xor rax, rax
     mov rsi, mem_v_alloc
     mov rsi, [rsi]
+    test rsi, rsi
+    jz .error_noinit
     ;pre calc inp size + tail size
     mov rcx, rdi
     add rcx, mem_s_alloc_list_tail_s
     ;loop through list and find spot in list
+    xor rax, rax
     .searchloop1:
         ;check if the current entry is a valid entry
         test rsi, rsi
@@ -291,7 +292,7 @@ mem_alloc:
         cmp rbx, rcx
         jl .next
         ;exit loop and setup in that space
-        jmp .list_found
+        jmp .list_insert
         .next:
         ;set pointer for next entry
         mov rax, rsi
@@ -317,7 +318,7 @@ mem_alloc:
         mov r9, rcx
         mov rdx, rax
         jmp .palloc
-    .list_found:
+    .list_insert:
         ;get pointer to tail of new entry
         mov rbx, rax
         add rbx, mem_s_alloc_list_tail_s
@@ -429,6 +430,67 @@ mem_alloc:
         pop rbx
         pop rax
         jmp $        
+
+
+mem_alloc_aligned:
+    ;check if align is useless
+    test rax, 0x0FFF
+    jz .skipp_aligned_0
+    ;save regs
+    push rax
+    ;---find v-space for alloc---
+    ;check if there is a list; if not error out
+    mov rsi, mem_v_alloc
+    mov rsi, [rsi]
+    test rsi, rsi
+    jz .error_noinit
+    ;pre calc entry size = inp size + tail size
+    mov rcx, rdi
+    add rcx, mem_s_alloc_list_tail_s
+    ;loop through list and find spot in list or append
+    .searchloop1:
+        ;chek if the current entry is a valid entry 
+        test rsi, rsi
+        jz .list_append
+        ;check if there is a last entry
+        test 
+
+
+
+    mov rdx, rcx
+
+    call screen_nl
+    call screen_print_hex_q
+
+    jmp $
+    test rsi, rsi
+
+    .list_append:
+    call screen_no
+    call screen_debug_hex_all
+    jmp $
+
+    .list_insert:
+    call screen_yes
+    call screen_debug_hex_all
+    jmp $
+
+
+
+.exit:
+    pop rax
+    ret
+
+
+.skipp_aligned_0:
+    ;skipp if alignment is page aligned
+    call mem_alloc
+    ret
+
+.error_noinit:
+    mov rdi, mem_error_alloc_notinit
+    call screen_print_string
+    jmp $
 
 mem_free:
     ;save regs
